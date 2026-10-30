@@ -1,709 +1,518 @@
 <!DOCTYPE html>
-<html lang="de" class="dark">
+<html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Haushaltsbuch PWA - Dark Mode</title>
-    
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            bg: '#0f172a',       // Slate 900
-                            card: '#1e293b',     // Slate 800
-                            border: '#334155',   // Slate 700
-                            input: '#0f172a',    // Slate 900
-                            accent: '#6366f1',   // Indigo 500
-                            income: '#10b981',   // Emerald 500
-                            expense: '#f43f5e',  // Rose 500
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    
-    <style>
-        /* Custom UI Tweaks & Animations */
-        body {
-            background-color: #0f172a;
-            color: #f8fafc;
-            font-family: 'Inter', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Haushaltsbuch PWA</title>
+  <style>
+    :root {
+      --bg-main: #0f172a;
+      --bg-card: #1e293b;
+      --bg-card-hover: #334155;
+      --bg-input: #0f172a;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --border: #334155;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --accent-blue: #3b82f6;
+      --radius: 12px;
+    }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 9999px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
 
-        /* Segmented Button Active Glow */
-        .type-btn-active-expense {
-            background-color: #f43f5e !important;
-            color: #ffffff !important;
-            box-shadow: 0 4px 14px 0 rgba(244, 63, 94, 0.39);
-        }
-        .type-btn-active-income {
-            background-color: #10b981 !important;
-            color: #ffffff !important;
-            box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.39);
-        }
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
 
-        /* Toast notification animation */
-        @keyframes slideUp {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .animate-slide-up {
-            animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-    </style>
+    .app-container {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
+
+    h2 {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    /* Header & Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+
+    .stat-card {
+      background-color: var(--bg-card);
+      padding: 1rem 0.75rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .stat-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .stat-card.balance .stat-value { color: var(--text-primary); }
+    .stat-card.income .stat-value { color: var(--accent-green); }
+    .stat-card.expense .stat-value { color: var(--accent-red); }
+
+    /* Form & Section Cards */
+    .card-section {
+      background-color: var(--bg-card);
+      padding: 1.25rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .transaction-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    input, select {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 0.65rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent-blue);
+    }
+
+    .btn-primary {
+      background-color: var(--accent-blue);
+      color: white;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    /* Transaktionsliste */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .transaction-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .transaction-item {
+      background-color: var(--bg-main);
+      border: 1px solid var(--border);
+      padding: 0.85rem;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .item-main {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .item-category {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .item-meta {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .item-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .item-amount {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .item-amount.income { color: var(--accent-green); }
+    .item-amount.expense { color: var(--accent-red); }
+
+    .btn-delete {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    .btn-delete:hover {
+      color: var(--accent-red);
+      background-color: rgba(239, 68, 68, 0.1);
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      padding: 1.5rem 0;
+    }
+  </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between pb-10">
-
-    <!-- Top Navigation Header -->
-    <header class="border-b border-brand-border bg-brand-card/80 backdrop-blur-md sticky top-0 z-30 px-4 py-3 sm:px-6">
-        <div class="max-w-4xl mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-xl shadow-lg">
-                    €
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold tracking-tight text-slate-100 leading-tight">Haushaltsbuch</h1>
-                    <p class="text-xs text-slate-400">Phase 1 • Basis-Erfassung</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center gap-2">
-                <button id="seedDataBtn" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 border border-brand-border px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    <span>Testdaten</span>
-                </button>
-                <button id="clearDataBtn" class="text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 px-3 py-1.5 rounded-lg transition-colors">
-                    Löschen
-                </button>
-            </div>
+<body>
+  <div class="app-container">
+    
+    <!-- Header & Statistiken -->
+    <header class="app-header">
+      <h1>Haushaltsbuch</h1>
+      <div class="stats-grid">
+        <div class="stat-card balance">
+          <span class="stat-label">Gesamtsaldo</span>
+          <span class="stat-value" id="total-balance">0,00 €</span>
         </div>
+        <div class="stat-card income">
+          <span class="stat-label">Einnahmen</span>
+          <span class="stat-value" id="total-income">+0,00 €</span>
+        </div>
+        <div class="stat-card expense">
+          <span class="stat-label">Ausgaben</span>
+          <span class="stat-value" id="total-expense">-0,00 €</span>
+        </div>
+      </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="max-w-4xl mx-auto w-full px-4 pt-6 space-y-6 flex-grow">
-
-        <!-- 1. Top Summary Stat Cards Grid -->
-        <section class="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Finanzübersicht">
-            
-            <!-- Gesamt-Saldo -->
-            <div class="bg-brand-card border border-brand-border rounded-2xl p-4 shadow-sm flex flex-col justify-between">
-                <div class="flex items-center justify-between text-slate-400 mb-2">
-                    <span class="text-xs font-semibold uppercase tracking-wider">Gesamt-Saldo</span>
-                    <div class="w-7 h-7 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
-                    </div>
-                </div>
-                <div>
-                    <div id="statBalance" class="text-2xl sm:text-3xl font-extrabold text-slate-100">€ 0,00</div>
-                    <p class="text-xs text-slate-400 mt-1">Aktueller Nettobestand</p>
-                </div>
-            </div>
-
-            <!-- Einnahmen -->
-            <div class="bg-brand-card border border-brand-border rounded-2xl p-4 shadow-sm flex flex-col justify-between">
-                <div class="flex items-center justify-between text-slate-400 mb-2">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Einnahmen</span>
-                    <div class="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/></svg>
-                    </div>
-                </div>
-                <div>
-                    <div id="statIncome" class="text-2xl sm:text-3xl font-bold text-emerald-400">+ € 0,00</div>
-                    <p class="text-xs text-slate-400 mt-1">Summe aller Zuflüsse</p>
-                </div>
-            </div>
-
-            <!-- Ausgaben -->
-            <div class="bg-brand-card border border-brand-border rounded-2xl p-4 shadow-sm flex flex-col justify-between">
-                <div class="flex items-center justify-between text-slate-400 mb-2">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-rose-400">Ausgaben</span>
-                    <div class="w-7 h-7 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-400">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"/></svg>
-                    </div>
-                </div>
-                <div>
-                    <div id="statExpense" class="text-2xl sm:text-3xl font-bold text-rose-400">- € 0,00</div>
-                    <p class="text-xs text-slate-400 mt-1">Summe aller Abflüsse</p>
-                </div>
-            </div>
-
-        </section>
-
-        <!-- 2. Transaction Input Form Card -->
-        <section class="bg-brand-card border border-brand-border rounded-2xl p-5 sm:p-6 shadow-md">
-            <h2 class="text-base font-semibold text-slate-100 mb-4 flex items-center gap-2">
-                <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Neue Transaktion erfassen
-            </h2>
-
-            <form id="transactionForm" class="space-y-4">
-                
-                <!-- Typ-Auswahl (Segmented Control) -->
-                <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Typ</label>
-                    <div class="grid grid-cols-2 gap-2 p-1 bg-brand-bg rounded-xl border border-brand-border">
-                        <button type="button" id="btnTypeExpense" class="py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-150 type-btn-active-expense flex items-center justify-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
-                            Ausgabe
-                        </button>
-                        <button type="button" id="btnTypeIncome" class="py-2.5 px-4 rounded-lg text-sm font-semibold text-slate-400 hover:text-slate-200 transition-all duration-150 flex items-center justify-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
-                            Einnahme
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Input Grid: Betrag, Kategorie, Datum -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    
-                    <!-- Betrag -->
-                    <div>
-                        <label for="inputAmount" class="block text-xs font-medium text-slate-400 mb-1.5">Betrag (€) *</label>
-                        <div class="relative">
-                            <input type="number" id="inputAmount" step="0.01" min="0.01" placeholder="0,00" required
-                                class="w-full bg-brand-bg border border-brand-border rounded-xl px-3.5 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-semibold text-lg transition-colors">
-                            <span class="absolute right-3.5 top-3 text-slate-400 font-medium">€</span>
-                        </div>
-                    </div>
-
-                    <!-- Kategorie -->
-                    <div>
-                        <label for="inputCategory" class="block text-xs font-medium text-slate-400 mb-1.5">Kategorie *</label>
-                        <select id="inputCategory" required
-                            class="w-full bg-brand-bg border border-brand-border rounded-xl px-3.5 py-3 text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm transition-colors cursor-pointer">
-                            <option value="" disabled selected>Kategorie wählen...</option>
-                            <option value="Fixkosten">🏠 Fixkosten</option>
-                            <option value="Lebensmittel">🛒 Lebensmittel & Haushalt</option>
-                            <option value="Freizeit">🎮 Freizeit & Hobby</option>
-                            <option value="Transport">🚗 Transport & Fahrtkosten</option>
-                            <option value="Werkzeug">🛠️ Werkzeug & Material</option>
-                            <option value="Sonstiges">📦 Sonstiges</option>
-                        </select>
-                    </div>
-
-                    <!-- Datum -->
-                    <div>
-                        <label for="inputDate" class="block text-xs font-medium text-slate-400 mb-1.5">Datum *</label>
-                        <input type="date" id="inputDate" required
-                            class="w-full bg-brand-bg border border-brand-border rounded-xl px-3.5 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm transition-colors">
-                    </div>
-
-                </div>
-
-                <!-- Notiz / Beschreibung -->
-                <div>
-                    <label for="inputNote" class="block text-xs font-medium text-slate-400 mb-1.5">Notiz / Verwendungszweck (Optional)</label>
-                    <input type="text" id="inputNote" placeholder="z. B. Wocheneinkauf Rewe, Tanken, Gehalt..."
-                        class="w-full bg-brand-bg border border-brand-border rounded-xl px-3.5 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm transition-colors">
-                </div>
-
-                <!-- Submit Button -->
-                <button type="submit"
-                    class="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-[0.99] text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                    <span>Transaktion speichern</span>
-                </button>
-
-            </form>
-        </section>
-
-        <!-- 3. Recent Transactions List Header & Filters -->
-        <section class="space-y-4">
-            
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <h2 class="text-base font-semibold text-slate-100 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                    Buchungen (<span id="txCount">0</span>)
-                </h2>
-
-                <!-- Filter Inputs -->
-                <div class="flex items-center gap-2">
-                    <!-- Filter Typ -->
-                    <select id="filterType" class="bg-brand-card border border-brand-border rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer">
-                        <option value="all">Alle Typen</option>
-                        <option value="expense">Nur Ausgaben</option>
-                        <option value="income">Nur Einnahmen</option>
-                    </select>
-
-                    <!-- Filter Kategorie -->
-                    <select id="filterCategory" class="bg-brand-card border border-brand-border rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer">
-                        <option value="all">Alle Kategorien</option>
-                        <option value="Fixkosten">Fixkosten</option>
-                        <option value="Lebensmittel">Lebensmittel</option>
-                        <option value="Freizeit">Freizeit</option>
-                        <option value="Transport">Transport</option>
-                        <option value="Werkzeug">Werkzeug & Material</option>
-                        <option value="Sonstiges">Sonstiges</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Transactions List Container -->
-            <div id="transactionsContainer" class="space-y-2.5">
-                <!-- Dynamically populated via JS -->
-            </div>
-
-        </section>
-
-    </main>
-
-    <!-- Modal Dialog für Bestätigung Löschen -->
-    <div id="deleteModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-brand-card border border-brand-border rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
-            <div class="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-            </div>
-            <div class="text-center">
-                <h3 class="text-lg font-bold text-slate-100">Buchung löschen?</h3>
-                <p class="text-xs text-slate-400 mt-1">Möchtest du diese Buchung wirklich unwiderruflich entfernen?</p>
-            </div>
-            <div class="grid grid-cols-2 gap-3 pt-2">
-                <button id="cancelDeleteBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl text-sm font-medium transition-colors">Abbrechen</button>
-                <button id="confirmDeleteBtn" class="bg-rose-600 hover:bg-rose-500 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">Löschen</button>
-            </div>
+    <!-- Transaktion hinzufügen -->
+    <section class="card-section">
+      <h2>Neue Buchung</h2>
+      <form id="transaction-form" class="transaction-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="amount">Betrag (€)</label>
+            <input type="number" id="amount" step="0.01" min="0.01" placeholder="0,00" required>
+          </div>
+          <div class="form-group">
+            <label for="type">Typ</label>
+            <select id="type" required>
+              <option value="expense">Ausgabe</option>
+              <option value="income">Einnahme</option>
+            </select>
+          </div>
         </div>
-    </div>
 
-    <!-- Toast Notification Overlay -->
-    <div id="toast" class="fixed bottom-4 right-4 z-50 hidden">
-        <div id="toastInner" class="bg-slate-800 border border-slate-700 text-slate-100 text-xs sm:text-sm px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-slide-up">
-            <span id="toastIcon">✨</span>
-            <span id="toastMessage">Aktion erfolgreich</span>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="category">Kategorie</label>
+            <select id="category" required>
+              <option value="Lebensmittel">Lebensmittel & Haushalt</option>
+              <option value="Fixkosten">Fixkosten & Abos</option>
+              <option value="Freizeit">Freizeit & Hobby</option>
+              <option value="Transport">Transport & Tanken</option>
+              <option value="Werkzeug">Werkzeug & Material</option>
+              <option value="Sonstiges">Sonstiges</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="date">Datum</label>
+            <input type="date" id="date" required>
+          </div>
         </div>
-    </div>
 
-    <!-- JavaScript Application Core -->
-    <script>
-        /**
-         * Pure Modular Architecture Pattern for Haushaltsbuch App
-         * - StorageManager: Abstraction layer for persistence (LocalStorage now, Firebase Firestore ready)
-         * - UIController: Handles DOM elements, event listeners & rendering
-         */
+        <div class="form-group">
+          <label for="note">Notiz (optional)</label>
+          <input type="text" id="note" placeholder="z. B. Supermarkteinkauf">
+        </div>
 
-        // Category Config (Icons, Colors, Badges)
-        const CATEGORIES = {
-            'Fixkosten': { icon: '🏠', bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20' },
-            'Lebensmittel': { icon: '🛒', bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
-            'Freizeit': { icon: '🎮', bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/20' },
-            'Transport': { icon: '🚗', bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20' },
-            'Werkzeug': { icon: '🛠️', bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/20' },
-            'Sonstiges': { icon: '📦', bg: 'bg-slate-500/10', text: 'text-slate-400', border: 'border-slate-500/20' }
-        };
+        <button type="submit" id="submit-btn" class="btn-primary">Buchung speichern</button>
+      </form>
+    </section>
 
-        // --- Storage Manager ---
-        class StorageManager {
-            constructor(storageKey = 'budget_app_transactions_v1') {
-                this.STORAGE_KEY = storageKey;
-            }
+    <!-- Transaktionshistorie -->
+    <section class="card-section">
+      <div class="section-header">
+        <h2>Buchungen</h2>
+        <div class="filter-controls">
+          <select id="type-filter">
+            <option value="all">Alle Typen</option>
+            <option value="expense">Nur Ausgaben</option>
+            <option value="income">Nur Einnahmen</option>
+          </select>
+        </div>
+      </div>
 
-            getTransactions() {
-                try {
-                    const data = localStorage.getItem(this.STORAGE_KEY);
-                    return data ? JSON.parse(data) : [];
-                } catch (e) {
-                    console.error('Fehler beim Laden der Transaktionen:', e);
-                    return [];
-                }
-            }
+      <ul id="transaction-list" class="transaction-list">
+        <!-- Dynamische Einträge -->
+      </ul>
+    </section>
 
-            saveTransactions(transactions) {
-                try {
-                    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(transactions));
-                } catch (e) {
-                    console.error('Fehler beim Speichern der Transaktionen:', e);
-                }
-            }
+  </div>
 
-            addTransaction(item) {
-                const transactions = this.getTransactions();
-                // Attach generated local ID & creation timestamp
-                const newItem = {
-                    id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
-                    createdAt: new Date().toISOString(),
-                    ...item
-                };
-                transactions.unshift(newItem); // Newest first
-                this.saveTransactions(transactions);
-                return newItem;
-            }
+  <!-- Firebase & App Logic -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { 
+      getFirestore, 
+      collection, 
+      addDoc, 
+      getDocs, 
+      deleteDoc, 
+      doc, 
+      serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-            deleteTransaction(id) {
-                let transactions = this.getTransactions();
-                transactions = transactions.filter(tx => tx.id !== id);
-                this.saveTransactions(transactions);
-            }
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAOR__FV6ujC-a7W5mdw_Bq_ozL9L3rwAw",
+      authDomain: "haushaltsbuch-b2a0f.firebaseapp.com",
+      projectId: "haushaltsbuch-b2a0f",
+      storageBucket: "haushaltsbuch-b2a0f.firebasestorage.app",
+      messagingSenderId: "836022748250",
+      appId: "1:836022748250:web:8db4d8477ea19d7d38c463"
+    };
 
-            clearAll() {
-                localStorage.removeItem(this.STORAGE_KEY);
-            }
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const COLLECTION_NAME = "transactions";
+
+    // State
+    let transactions = [];
+
+    // DOM Referenzen
+    const form = document.getElementById("transaction-form");
+    const list = document.getElementById("transaction-list");
+    const dateInput = document.getElementById("date");
+    const typeFilter = document.getElementById("type-filter");
+    const submitBtn = document.getElementById("submit-btn");
+
+    const totalBalanceEl = document.getElementById("total-balance");
+    const totalIncomeEl = document.getElementById("total-income");
+    const totalExpenseEl = document.getElementById("total-expense");
+
+    // Init
+    document.addEventListener("DOMContentLoaded", async () => {
+      dateInput.value = new Date().toISOString().split("T")[0];
+      await loadAndRenderData();
+
+      form.addEventListener("submit", handleFormSubmit);
+      typeFilter.addEventListener("change", renderList);
+    });
+
+    // DB Operations
+    async function addTransactionToDB(data) {
+      return await addDoc(collection(db, COLLECTION_NAME), {
+        amount: parseFloat(data.amount),
+        type: data.type,
+        category: data.category,
+        date: data.date,
+        note: data.note || "",
+        createdAt: serverTimestamp()
+      });
+    }
+
+    async function getTransactionsFromDB() {
+      const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
+      const items = querySnapshot.docs.map(docSnap => ({
+        id: docSnap.id,
+        ...docSnap.data()
+      }));
+      return items.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+
+    async function deleteTransactionFromDB(id) {
+      await deleteDoc(doc(db, COLLECTION_NAME, id));
+    }
+
+    // UI Rendering & Handling
+    async function loadAndRenderData() {
+      list.innerHTML = `<li class="empty-state">Lade Buchungen...</li>`;
+      try {
+        transactions = await getTransactionsFromDB();
+        renderStats();
+        renderList();
+      } catch (err) {
+        console.error(err);
+        list.innerHTML = `<li class="empty-state" style="color: var(--accent-red);">Fehler beim Laden der Daten!</li>`;
+      }
+    }
+
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+
+      const formData = {
+        amount: document.getElementById("amount").value,
+        type: document.getElementById("type").value,
+        category: document.getElementById("category").value,
+        date: document.getElementById("date").value,
+        note: document.getElementById("note").value.trim()
+      };
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Speichere...";
+
+      try {
+        await addTransactionToDB(formData);
+        form.reset();
+        dateInput.value = new Date().toISOString().split("T")[0];
+        await loadAndRenderData();
+      } catch (err) {
+        alert("Speichern fehlgeschlagen.");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Buchung speichern";
+      }
+    }
+
+    function renderStats() {
+      const totals = transactions.reduce((acc, t) => {
+        const amount = Number(t.amount) || 0;
+        if (t.type === "income") {
+          acc.income += amount;
+        } else {
+          acc.expense += amount;
         }
+        return acc;
+      }, { income: 0, expense: 0 });
 
-        // --- UI Controller ---
-        class UIController {
-            constructor() {
-                this.storage = new StorageManager();
-                this.currentType = 'expense'; // Default type selection
-                this.deleteTargetId = null;
+      const balance = totals.income - totals.expense;
 
-                this.initDOM();
-                this.bindEvents();
-                this.setDefaultDate();
-                this.render();
-            }
+      totalBalanceEl.textContent = formatCurrency(balance);
+      totalIncomeEl.textContent = `+${formatCurrency(totals.income)}`;
+      totalExpenseEl.textContent = `-${formatCurrency(totals.expense)}`;
+    }
 
-            initDOM() {
-                // Form elements
-                this.form = document.getElementById('transactionForm');
-                this.btnTypeExpense = document.getElementById('btnTypeExpense');
-                this.btnTypeIncome = document.getElementById('btnTypeIncome');
-                this.inputAmount = document.getElementById('inputAmount');
-                this.inputCategory = document.getElementById('inputCategory');
-                this.inputDate = document.getElementById('inputDate');
-                this.inputNote = document.getElementById('inputNote');
+    function renderList() {
+      const selectedType = typeFilter.value;
+      const filtered = transactions.filter(t => selectedType === "all" || t.type === selectedType);
 
-                // Summary Stats
-                this.statBalance = document.getElementById('statBalance');
-                this.statIncome = document.getElementById('statIncome');
-                this.statExpense = document.getElementById('statExpense');
+      if (filtered.length === 0) {
+        list.innerHTML = `<li class="empty-state">Keine Buchungen vorhanden.</li>`;
+        return;
+      }
 
-                // List & Filter elements
-                this.txContainer = document.getElementById('transactionsContainer');
-                this.txCount = document.getElementById('txCount');
-                this.filterType = document.getElementById('filterType');
-                this.filterCategory = document.getElementById('filterCategory');
-
-                // Header buttons
-                this.seedDataBtn = document.getElementById('seedDataBtn');
-                this.clearDataBtn = document.getElementById('clearDataBtn');
-
-                // Modal & Toast
-                this.deleteModal = document.getElementById('deleteModal');
-                this.confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-                this.cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
-                this.toast = document.getElementById('toast');
-                this.toastMessage = document.getElementById('toastMessage');
-                this.toastIcon = document.getElementById('toastIcon');
-            }
-
-            bindEvents() {
-                // Type Toggle Buttons
-                this.btnTypeExpense.addEventListener('click', () => this.setType('expense'));
-                this.btnTypeIncome.addEventListener('click', () => this.setType('income'));
-
-                // Form submission
-                this.form.addEventListener('submit', (e) => this.handleFormSubmit(e));
-
-                // Filters
-                this.filterType.addEventListener('change', () => this.renderList());
-                this.filterCategory.addEventListener('change', () => this.renderList());
-
-                // Seed & Clear data
-                this.seedDataBtn.addEventListener('click', () => this.seedDemoData());
-                this.clearDataBtn.addEventListener('click', () => this.clearAllData());
-
-                // Delete Modal Actions
-                this.cancelDeleteBtn.addEventListener('click', () => this.closeDeleteModal());
-                this.confirmDeleteBtn.addEventListener('click', () => this.executeDelete());
-            }
-
-            setDefaultDate() {
-                // Set today's date in YYYY-MM-DD
-                const today = new Date().toISOString().split('T')[0];
-                this.inputDate.value = today;
-            }
-
-            setType(type) {
-                this.currentType = type;
-                if (type === 'expense') {
-                    this.btnTypeExpense.className = 'py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-150 type-btn-active-expense flex items-center justify-center gap-2';
-                    this.btnTypeIncome.className = 'py-2.5 px-4 rounded-lg text-sm font-semibold text-slate-400 hover:text-slate-200 transition-all duration-150 flex items-center justify-center gap-2';
-                } else {
-                    this.btnTypeIncome.className = 'py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-150 type-btn-active-income flex items-center justify-center gap-2';
-                    this.btnTypeExpense.className = 'py-2.5 px-4 rounded-lg text-sm font-semibold text-slate-400 hover:text-slate-200 transition-all duration-150 flex items-center justify-center gap-2';
-                }
-            }
-
-            handleFormSubmit(e) {
-                e.preventDefault();
-
-                const amountVal = parseFloat(this.inputAmount.value);
-                const categoryVal = this.inputCategory.value;
-                const dateVal = this.inputDate.value;
-                const noteVal = this.inputNote.value.trim();
-
-                if (isNaN(amountVal) || amountVal <= 0) {
-                    this.showToast('Bitte einen gültigen Betrag eingeben.', '⚠️');
-                    return;
-                }
-
-                if (!categoryVal) {
-                    this.showToast('Bitte wähle eine Kategorie aus.', '⚠️');
-                    return;
-                }
-
-                const transaction = {
-                    type: this.currentType,
-                    amount: amountVal,
-                    category: categoryVal,
-                    date: dateVal,
-                    note: noteVal
-                };
-
-                this.storage.addTransaction(transaction);
-                
-                // Reset Form inputs (keep today's date)
-                this.inputAmount.value = '';
-                this.inputNote.value = '';
-                this.inputCategory.value = '';
-                
-                this.showToast(this.currentType === 'expense' ? 'Ausgabe erfasst!' : 'Einnahme erfasst!', '✅');
-                this.render();
-            }
-
-            render() {
-                this.renderStats();
-                this.renderList();
-            }
-
-            renderStats() {
-                const transactions = this.storage.getTransactions();
-
-                let totalIncome = 0;
-                let totalExpense = 0;
-
-                transactions.forEach(tx => {
-                    const val = parseFloat(tx.amount) || 0;
-                    if (tx.type === 'income') {
-                        totalIncome += val;
-                    } else {
-                        totalExpense += val;
-                    }
-                });
-
-                const balance = totalIncome - totalExpense;
-
-                // Format Currency EUR
-                this.statIncome.textContent = '+ ' + this.formatCurrency(totalIncome);
-                this.statExpense.textContent = '- ' + this.formatCurrency(totalExpense);
-                
-                this.statBalance.textContent = this.formatCurrency(balance);
-                if (balance < 0) {
-                    this.statBalance.className = 'text-2xl sm:text-3xl font-extrabold text-rose-400';
-                } else if (balance > 0) {
-                    this.statBalance.className = 'text-2xl sm:text-3xl font-extrabold text-emerald-400';
-                } else {
-                    this.statBalance.className = 'text-2xl sm:text-3xl font-extrabold text-slate-100';
-                }
-            }
-
-            renderList() {
-                let transactions = this.storage.getTransactions();
-
-                // Apply Type Filter
-                const typeVal = this.filterType.value;
-                if (typeVal !== 'all') {
-                    transactions = transactions.filter(tx => tx.type === typeVal);
-                }
-
-                // Apply Category Filter
-                const catVal = this.filterCategory.value;
-                if (catVal !== 'all') {
-                    transactions = transactions.filter(tx => tx.category === catVal);
-                }
-
-                // Sort chronologically (newest date first)
-                transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-                this.txCount.textContent = transactions.length;
-
-                if (transactions.length === 0) {
-                    this.txContainer.innerHTML = `
-                        <div class="bg-brand-card/50 border border-brand-border rounded-2xl p-8 text-center space-y-3">
-                            <div class="w-12 h-12 rounded-full bg-slate-800 text-slate-500 flex items-center justify-center mx-auto text-xl">
-                                📑
-                            </div>
-                            <p class="text-sm font-medium text-slate-300">Keine Buchungen vorhanden</p>
-                            <p class="text-xs text-slate-500 max-w-xs mx-auto">Trage deine erste Einnahme oder Ausgabe im Formular oben ein oder klicke auf "Testdaten".</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                this.txContainer.innerHTML = transactions.map(tx => this.createTransactionHTML(tx)).join('');
-
-                // Attach event listeners to newly rendered delete buttons
-                document.querySelectorAll('.btn-delete-tx').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const id = e.currentTarget.getAttribute('data-id');
-                        this.openDeleteModal(id);
-                    });
-                });
-            }
-
-            createTransactionHTML(tx) {
-                const categoryConfig = CATEGORIES[tx.category] || CATEGORIES['Sonstiges'];
-                const isExpense = tx.type === 'expense';
-                const amountFormatted = (isExpense ? '- ' : '+ ') + this.formatCurrency(tx.amount);
-                const amountClass = isExpense ? 'text-rose-400' : 'text-emerald-400';
-                const formattedDate = this.formatDateGerman(tx.date);
-
-                return `
-                    <div class="bg-brand-card hover:bg-slate-800/80 border border-brand-border rounded-xl p-3.5 sm:p-4 transition-colors flex items-center justify-between gap-3 group">
-                        
-                        <!-- Left: Icon & Info -->
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div class="w-10 h-10 rounded-xl ${categoryConfig.bg} ${categoryConfig.border} border flex items-center justify-center text-lg flex-shrink-0">
-                                ${categoryConfig.icon}
-                            </div>
-                            <div class="min-w-0">
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="text-xs font-semibold px-2 py-0.5 rounded-md ${categoryConfig.bg} ${categoryConfig.text} border ${categoryConfig.border}">
-                                        ${tx.category}
-                                    </span>
-                                    <span class="text-xs text-slate-400 font-medium">${formattedDate}</span>
-                                </div>
-                                <p class="text-sm font-medium text-slate-200 truncate mt-0.5">
-                                    ${tx.note ? this.escapeHTML(tx.note) : '<span class="text-slate-500 italic">Keine Notiz</span>'}
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Right: Amount & Delete Button -->
-                        <div class="flex items-center gap-3 flex-shrink-0">
-                            <span class="text-sm sm:text-base font-bold ${amountClass} tracking-wide">
-                                ${amountFormatted}
-                            </span>
-                            <button data-id="${tx.id}" class="btn-delete-tx p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors opacity-80 group-hover:opacity-100" title="Buchung löschen">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                            </button>
-                        </div>
-
-                    </div>
-                `;
-            }
-
-            openDeleteModal(id) {
-                this.deleteTargetId = id;
-                this.deleteModal.classList.remove('hidden');
-            }
-
-            closeDeleteModal() {
-                this.deleteTargetId = null;
-                this.deleteModal.classList.add('hidden');
-            }
-
-            executeDelete() {
-                if (this.deleteTargetId) {
-                    this.storage.deleteTransaction(this.deleteTargetId);
-                    this.closeDeleteModal();
-                    this.showToast('Buchung gelöscht', '🗑️');
-                    this.render();
-                }
-            }
-
-            seedDemoData() {
-                const today = new Date();
-                const formatDate = (offsetDays) => {
-                    const d = new Date(today);
-                    d.setDate(d.getDate() - offsetDays);
-                    return d.toISOString().split('T')[0];
-                };
-
-                const demoItems = [
-                    { type: 'income', amount: 2850.00, category: 'Sonstiges', date: formatDate(1), note: 'Gehalt Oktober' },
-                    { type: 'expense', amount: 820.00, category: 'Fixkosten', date: formatDate(1), note: 'Miete & Nebenkosten' },
-                    { type: 'expense', amount: 64.30, category: 'Lebensmittel', date: formatDate(0), note: 'Wocheneinkauf Supermarkt' },
-                    { type: 'expense', amount: 45.00, category: 'Transport', date: formatDate(2), note: 'Tankstelle' },
-                    { type: 'expense', amount: 29.99, category: 'Freizeit', date: formatDate(3), note: 'Gaming Abo' },
-                    { type: 'expense', amount: 38.50, category: 'Werkzeug', date: formatDate(4), note: 'Baumarkt Material' }
-                ];
-
-                demoItems.forEach(item => this.storage.addTransaction(item));
-                this.showToast('Testdaten geladen!', '🚀');
-                this.render();
-            }
-
-            clearAllData() {
-                if (confirm('Wirklich alle Buchungen unwiderruflich löschen?')) {
-                    this.storage.clearAll();
-                    this.showToast('Alle Daten gelöscht', '🧹');
-                    this.render();
-                }
-            }
-
-            showToast(message, icon = '✨') {
-                this.toastMessage.textContent = message;
-                this.toastIcon.textContent = icon;
-                this.toast.classList.remove('hidden');
-
-                clearTimeout(this.toastTimer);
-                this.toastTimer = setTimeout(() => {
-                    this.toast.classList.add('hidden');
-                }, 2800);
-            }
-
-            // --- Helper Methods ---
-            formatCurrency(val) {
-                return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(val);
-            }
-
-            formatDateGerman(dateString) {
-                if (!dateString) return '';
-                const parts = dateString.split('-');
-                if (parts.length === 3) {
-                    return `${parts[2]}.${parts[1]}.${parts[0]}`;
-                }
-                return dateString;
-            }
-
-            escapeHTML(str) {
-                return str.replace(/[&<>'"]/g, 
-                    tag => ({
-                        '&': '&amp;',
-                        '<': '&lt;',
-                        '>': '&gt;',
-                        "'": '&#39;',
-                        '"': '&quot;'
-                    }[tag] || tag)
-                );
-            }
-        }
-
-        // Initialize App on DOM Content Loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            window.app = new UIController();
+      list.innerHTML = filtered.map(item => {
+        const isIncome = item.type === "income";
+        const prefix = isIncome ? "+" : "-";
+        const amountClass = isIncome ? "income" : "expense";
+        const formattedDate = new Date(item.date).toLocaleDateString("de-DE", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric"
         });
-    </script>
+
+        return `
+          <li class="transaction-item">
+            <div class="item-main">
+              <span class="item-category">${escapeHTML(item.category)}</span>
+              <span class="item-meta">${formattedDate}${item.note ? ` • ${escapeHTML(item.note)}` : ""}</span>
+            </div>
+            <div class="item-right">
+              <span class="item-amount ${amountClass}">${prefix}${formatCurrency(item.amount)}</span>
+              <button class="btn-delete" data-id="${item.id}" title="Löschen">✕</button>
+            </div>
+          </li>
+        `;
+      }).join("");
+
+      document.querySelectorAll(".btn-delete").forEach(btn => {
+        btn.addEventListener("click", handleDelete);
+      });
+    }
+
+    async function handleDelete(e) {
+      const id = e.target.getAttribute("data-id");
+      if (!id) return;
+
+      if (confirm("Möchtest du diese Buchung wirklich löschen?")) {
+        try {
+          await deleteTransactionFromDB(id);
+          await loadAndRenderData();
+        } catch (err) {
+          alert("Löschen fehlgeschlagen.");
+        }
+      }
+    }
+
+    function formatCurrency(num) {
+      return Number(num).toLocaleString("de-DE", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }) + " €";
+    }
+
+    function escapeHTML(str) {
+      return String(str).replace(/[&<>"']/g, match => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[match]);
+    }
+  </script>
 </body>
 </html>
