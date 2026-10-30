@@ -8,7 +8,6 @@
     :root {
       --bg-main: #0f172a;
       --bg-card: #1e293b;
-      --bg-card-hover: #334155;
       --bg-input: #0f172a;
       --text-primary: #f8fafc;
       --text-secondary: #94a3b8;
@@ -40,21 +39,48 @@
       max-width: 600px;
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 1.25rem;
     }
 
-    h1 {
-      font-size: 1.75rem;
-      margin-bottom: 1rem;
+    header h1 {
+      font-size: 1.5rem;
       font-weight: 700;
     }
 
     h2 {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: 600;
     }
 
-    /* Header & Stats Grid */
+    /* Tab Navigation */
+    .tab-nav {
+      display: flex;
+      gap: 0.5rem;
+      background-color: var(--bg-card);
+      padding: 0.35rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      padding: 0.65rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .tab-btn.active {
+      background-color: var(--accent-blue);
+      color: white;
+    }
+
+    /* Statistiken Grid */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -63,12 +89,13 @@
 
     .stat-card {
       background-color: var(--bg-card);
-      padding: 1rem 0.75rem;
+      padding: 0.85rem 0.65rem;
       border-radius: var(--radius);
       border: 1px solid var(--border);
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
+      min-width: 0;
     }
 
     .stat-label {
@@ -77,15 +104,18 @@
     }
 
     .stat-value {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .stat-card.balance .stat-value { color: var(--text-primary); }
     .stat-card.income .stat-value { color: var(--accent-green); }
     .stat-card.expense .stat-value { color: var(--accent-red); }
 
-    /* Form & Section Cards */
+    /* Container & Formular */
     .card-section {
       background-color: var(--bg-card);
       padding: 1.25rem;
@@ -112,6 +142,7 @@
       display: flex;
       flex-direction: column;
       gap: 0.35rem;
+      min-width: 0;
     }
 
     label {
@@ -120,10 +151,12 @@
     }
 
     input, select {
+      width: 100%;
+      min-width: 0;
       background-color: var(--bg-input);
       border: 1px solid var(--border);
       color: var(--text-primary);
-      padding: 0.65rem 0.8rem;
+      padding: 0.65rem 0.75rem;
       border-radius: 8px;
       font-size: 0.95rem;
       outline: none;
@@ -140,6 +173,7 @@
       padding: 0.75rem;
       border-radius: 8px;
       font-weight: 600;
+      font-size: 0.95rem;
       cursor: pointer;
       transition: opacity 0.2s;
     }
@@ -148,11 +182,12 @@
       opacity: 0.9;
     }
 
-    /* Transaktionsliste */
+    /* Listen & Historie */
     .section-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 0.5rem;
     }
 
     .transaction-list {
@@ -165,38 +200,47 @@
     .transaction-item {
       background-color: var(--bg-main);
       border: 1px solid var(--border);
-      padding: 0.85rem;
+      padding: 0.75rem 0.85rem;
       border-radius: 8px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 0.5rem;
     }
 
     .item-main {
       display: flex;
       flex-direction: column;
       gap: 0.2rem;
+      min-width: 0;
     }
 
     .item-category {
       font-weight: 600;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .item-meta {
       font-size: 0.75rem;
       color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .item-right {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
+      flex-shrink: 0;
     }
 
     .item-amount {
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 0.95rem;
     }
 
     .item-amount.income { color: var(--accent-green); }
@@ -217,102 +261,164 @@
       background-color: rgba(239, 68, 68, 0.1);
     }
 
+    /* Kategorie-Archiv Gruppierung */
+    .category-group {
+      background-color: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 0.75rem;
+    }
+
+    .category-group-header {
+      background-color: rgba(255, 255, 255, 0.03);
+      padding: 0.75rem 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+    }
+
+    .category-group-list {
+      list-style: none;
+      padding: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
     .empty-state {
       text-align: center;
       color: var(--text-secondary);
       font-size: 0.9rem;
       padding: 1.5rem 0;
     }
+
+    .view-content {
+      display: none;
+    }
+
+    .view-content.active {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* Responsives Verhalten für Mobile Screens */
+    @media (max-width: 480px) {
+      body {
+        padding: 0.5rem;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="app-container">
     
-    <!-- Header & Statistiken -->
     <header class="app-header">
       <h1>Haushaltsbuch</h1>
-      <div class="stats-grid">
-        <div class="stat-card balance">
-          <span class="stat-label">Gesamtsaldo</span>
-          <span class="stat-value" id="total-balance">0,00 €</span>
-        </div>
-        <div class="stat-card income">
-          <span class="stat-label">Einnahmen</span>
-          <span class="stat-value" id="total-income">+0,00 €</span>
-        </div>
-        <div class="stat-card expense">
-          <span class="stat-label">Ausgaben</span>
-          <span class="stat-value" id="total-expense">-0,00 €</span>
-        </div>
-      </div>
     </header>
 
-    <!-- Transaktion hinzufügen -->
-    <section class="card-section">
-      <h2>Neue Buchung</h2>
-      <form id="transaction-form" class="transaction-form">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="amount">Betrag (€)</label>
-            <input type="number" id="amount" step="0.01" min="0.01" placeholder="0,00" required>
-          </div>
-          <div class="form-group">
-            <label for="type">Typ</label>
-            <select id="type" required>
-              <option value="expense">Ausgabe</option>
-              <option value="income">Einnahme</option>
-            </select>
-          </div>
-        </div>
+    <!-- Navigation Tabs -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-view="entry-view">Erfassung</button>
+      <button class="tab-btn" data-view="archive-view">Kategorie-Übersicht</button>
+    </nav>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="category">Kategorie</label>
-            <select id="category" required>
-              <option value="Lebensmittel">Lebensmittel & Haushalt</option>
-              <option value="Fixkosten">Fixkosten & Abos</option>
-              <option value="Freizeit">Freizeit & Hobby</option>
-              <option value="Transport">Transport & Tanken</option>
-              <option value="Werkzeug">Werkzeug & Material</option>
-              <option value="Sonstiges">Sonstiges</option>
-            </select>
+    <!-- Globale Statistiken -->
+    <div class="stats-grid">
+      <div class="stat-card balance">
+        <span class="stat-label">Gesamtsaldo</span>
+        <span class="stat-value" id="total-balance">0,00 €</span>
+      </div>
+      <div class="stat-card income">
+        <span class="stat-label">Einnahmen</span>
+        <span class="stat-value" id="total-income">+0,00 €</span>
+      </div>
+      <div class="stat-card expense">
+        <span class="stat-label">Ausgaben</span>
+        <span class="stat-value" id="total-expense">-0,00 €</span>
+      </div>
+    </div>
+
+    <!-- TAB 1: Erfassung & Neueste Buchungen -->
+    <main id="entry-view" class="view-content active">
+      <section class="card-section">
+        <h2>Neue Buchung</h2>
+        <form id="transaction-form" class="transaction-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="amount">Betrag (€)</label>
+              <input type="number" id="amount" step="0.01" min="0.01" placeholder="0,00" required>
+            </div>
+            <div class="form-group">
+              <label for="type">Typ</label>
+              <select id="type" required>
+                <option value="expense">Ausgabe</option>
+                <option value="income">Einnahme</option>
+              </select>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="date">Datum</label>
-            <input type="date" id="date" required>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="category">Kategorie</label>
+              <select id="category" required>
+                <!-- Wird per JavaScript befüllt -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="date">Datum</label>
+              <input type="date" id="date" required>
+            </div>
           </div>
-        </div>
 
-        <div class="form-group">
-          <label for="note">Notiz (optional)</label>
-          <input type="text" id="note" placeholder="z. B. Supermarkteinkauf">
-        </div>
+          <div class="form-group">
+            <label for="note">Notiz (optional)</label>
+            <input type="text" id="note" placeholder="z. B. Supermarkteinkauf">
+          </div>
 
-        <button type="submit" id="submit-btn" class="btn-primary">Buchung speichern</button>
-      </form>
-    </section>
+          <button type="submit" id="submit-btn" class="btn-primary">Buchung speichern</button>
+        </form>
+      </section>
 
-    <!-- Transaktionshistorie -->
-    <section class="card-section">
-      <div class="section-header">
-        <h2>Buchungen</h2>
-        <div class="filter-controls">
-          <select id="type-filter">
-            <option value="all">Alle Typen</option>
-            <option value="expense">Nur Ausgaben</option>
-            <option value="income">Nur Einnahmen</option>
+      <section class="card-section">
+        <div class="section-header">
+          <h2>Neueste Buchungen</h2>
+          <select id="type-filter" style="width: auto;">
+            <option value="all">Alle</option>
+            <option value="expense">Ausgaben</option>
+            <option value="income">Einnahmen</option>
           </select>
         </div>
-      </div>
 
-      <ul id="transaction-list" class="transaction-list">
-        <!-- Dynamische Einträge -->
-      </ul>
-    </section>
+        <ul id="transaction-list" class="transaction-list">
+          <!-- Dynamischer Inhalt -->
+        </ul>
+      </section>
+    </main>
+
+    <!-- TAB 2: Kategorie-Archiv -->
+    <main id="archive-view" class="view-content">
+      <section class="card-section">
+        <h2>Übersicht nach Kategorien</h2>
+        <div id="category-archive-container">
+          <!-- Gruppierte Einträge -->
+        </div>
+      </section>
+    </main>
 
   </div>
 
-  <!-- Firebase & App Logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { 
@@ -325,7 +431,7 @@
       serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // Firebase Config
+    // Firebase Konfiguration
     const firebaseConfig = {
       apiKey: "AIzaSyAOR__FV6ujC-a7W5mdw_Bq_ozL9L3rwAw",
       authDomain: "haushaltsbuch-b2a0f.firebaseapp.com",
@@ -339,15 +445,38 @@
     const db = getFirestore(app);
     const COLLECTION_NAME = "transactions";
 
+    // Kategorien Zuordnung
+    const CATEGORIES = {
+      expense: [
+        "Lebensmittel & Haushalt",
+        "Fixkosten & Abos",
+        "Freizeit & Hobby",
+        "Transport & Tanken",
+        "Werkzeug & Material",
+        "Sonstiges"
+      ],
+      income: [
+        "Gehalt & Lohn",
+        "Nebengewerbe / Selbstständigkeit",
+        "Rückzahlung & Erstattung",
+        "Geschenk / Bonus",
+        "Sonstiges"
+      ]
+    };
+
     // State
     let transactions = [];
 
     // DOM Referenzen
     const form = document.getElementById("transaction-form");
-    const list = document.getElementById("transaction-list");
+    const typeSelect = document.getElementById("type");
+    const categorySelect = document.getElementById("category");
     const dateInput = document.getElementById("date");
+    const list = document.getElementById("transaction-list");
     const typeFilter = document.getElementById("type-filter");
     const submitBtn = document.getElementById("submit-btn");
+    const tabBtns = document.querySelectorAll(".tab-btn");
+    const archiveContainer = document.getElementById("category-archive-container");
 
     const totalBalanceEl = document.getElementById("total-balance");
     const totalIncomeEl = document.getElementById("total-income");
@@ -356,13 +485,37 @@
     // Init
     document.addEventListener("DOMContentLoaded", async () => {
       dateInput.value = new Date().toISOString().split("T")[0];
+      updateCategoryOptions();
+      
       await loadAndRenderData();
 
+      typeSelect.addEventListener("change", updateCategoryOptions);
       form.addEventListener("submit", handleFormSubmit);
-      typeFilter.addEventListener("change", renderList);
+      typeFilter.addEventListener("change", renderRecentList);
+
+      tabBtns.forEach(btn => {
+        btn.addEventListener("click", () => switchTab(btn.dataset.view));
+      });
     });
 
-    // DB Operations
+    // Dynamische Kategorien anpassen
+    function updateCategoryOptions() {
+      const selectedType = typeSelect.value;
+      const options = CATEGORIES[selectedType] || [];
+      categorySelect.innerHTML = options.map(cat => `<option value="${escapeHTML(cat)}">${escapeHTML(cat)}</option>`).join("");
+    }
+
+    // Tab Wechsel
+    function switchTab(targetViewId) {
+      tabBtns.forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.view === targetViewId);
+      });
+      document.querySelectorAll(".view-content").forEach(view => {
+        view.classList.toggle("active", view.id === targetViewId);
+      });
+    }
+
+    // DB Operationen
     async function addTransactionToDB(data) {
       return await addDoc(collection(db, COLLECTION_NAME), {
         amount: parseFloat(data.amount),
@@ -387,13 +540,15 @@
       await deleteDoc(doc(db, COLLECTION_NAME, id));
     }
 
-    // UI Rendering & Handling
+    // UI Rendering
     async function loadAndRenderData() {
       list.innerHTML = `<li class="empty-state">Lade Buchungen...</li>`;
+      archiveContainer.innerHTML = `<p class="empty-state">Lade Kategorien...</p>`;
       try {
         transactions = await getTransactionsFromDB();
         renderStats();
-        renderList();
+        renderRecentList();
+        renderArchiveView();
       } catch (err) {
         console.error(err);
         list.innerHTML = `<li class="empty-state" style="color: var(--accent-red);">Fehler beim Laden der Daten!</li>`;
@@ -405,9 +560,9 @@
 
       const formData = {
         amount: document.getElementById("amount").value,
-        type: document.getElementById("type").value,
-        category: document.getElementById("category").value,
-        date: document.getElementById("date").value,
+        type: typeSelect.value,
+        category: categorySelect.value,
+        date: dateInput.value,
         note: document.getElementById("note").value.trim()
       };
 
@@ -418,6 +573,7 @@
         await addTransactionToDB(formData);
         form.reset();
         dateInput.value = new Date().toISOString().split("T")[0];
+        updateCategoryOptions();
         await loadAndRenderData();
       } catch (err) {
         alert("Speichern fehlgeschlagen.");
@@ -445,7 +601,7 @@
       totalExpenseEl.textContent = `-${formatCurrency(totals.expense)}`;
     }
 
-    function renderList() {
+    function renderRecentList() {
       const selectedType = typeFilter.value;
       const filtered = transactions.filter(t => selectedType === "all" || t.type === selectedType);
 
@@ -478,7 +634,78 @@
         `;
       }).join("");
 
-      document.querySelectorAll(".btn-delete").forEach(btn => {
+      list.querySelectorAll(".btn-delete").forEach(btn => {
+        btn.addEventListener("click", handleDelete);
+      });
+    }
+
+    function renderArchiveView() {
+      if (transactions.length === 0) {
+        archiveContainer.innerHTML = `<p class="empty-state">Keine Buchungen für das Archiv vorhanden.</p>`;
+        return;
+      }
+
+      // Gruppierung nach Kategorie
+      const grouped = {};
+      transactions.forEach(t => {
+        const cat = t.category || "Sonstiges";
+        if (!grouped[cat]) {
+          grouped[cat] = {
+            items: [],
+            incomeTotal: 0,
+            expenseTotal: 0
+          };
+        }
+        grouped[cat].items.push(t);
+        if (t.type === "income") {
+          grouped[cat].incomeTotal += Number(t.amount) || 0;
+        } else {
+          grouped[cat].expenseTotal += Number(t.amount) || 0;
+        }
+      });
+
+      archiveContainer.innerHTML = Object.keys(grouped).map(catName => {
+        const group = grouped[catName];
+        const net = group.incomeTotal - group.expenseTotal;
+        const isPositive = net >= 0;
+        const totalClass = isPositive ? "income" : "expense";
+        const prefix = isPositive ? "+" : "-";
+
+        const itemsHTML = group.items.map(item => {
+          const isIncome = item.type === "income";
+          const formattedDate = new Date(item.date).toLocaleDateString("de-DE", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+          });
+
+          return `
+            <li class="transaction-item">
+              <div class="item-main">
+                <span class="item-meta">${formattedDate}${item.note ? ` • ${escapeHTML(item.note)}` : ""}</span>
+              </div>
+              <div class="item-right">
+                <span class="item-amount ${isIncome ? 'income' : 'expense'}">${isIncome ? '+' : '-'}${formatCurrency(item.amount)}</span>
+                <button class="btn-delete" data-id="${item.id}" title="Löschen">✕</button>
+              </div>
+            </li>
+          `;
+        }).join("");
+
+        return `
+          <div class="category-group">
+            <div class="category-group-header">
+              <span>${escapeHTML(catName)}</span>
+              <span class="item-amount ${totalClass}">${prefix}${formatCurrency(Math.abs(net))}</span>
+            </div>
+            <ul class="category-group-list">
+              ${itemsHTML}
+            </ul>
+          </div>
+        `;
+      }).join("");
+
+      archiveContainer.querySelectorAll(".btn-delete").forEach(btn => {
         btn.addEventListener("click", handleDelete);
       });
     }
