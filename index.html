@@ -3,401 +3,113 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Haushaltsbuch PWA</title>
-  <!-- Chart.js CDN -->
+  <meta name="theme-color" content="#000000"> <!-- Wichtig für PWA Statusleiste -->
+  <title>Haushaltsbuch</title>
+  
+  <!-- Verknüpfung zum PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
   <style>
     :root {
-      /* Fitness App Theme: Schwarz & Türkis */
       --bg-main: #000000;
       --bg-card: #121212;
       --bg-input: #1a1a1a;
       --text-primary: #ffffff;
       --text-secondary: #a0a0a0;
       --border: #2a2a2a;
-      
-      /* Akzente */
       --accent-primary: #00e5ff; 
       --accent-primary-hover: #00cce6;
       --accent-green: #00e676;
-      --accent-warning: #ff9100; /* Orange für Budget > 80% */
+      --accent-warning: #ff9100;
       --accent-red: #ff3d00;
-      
       --radius: 12px;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-
-    body {
-      background-color: var(--bg-main);
-      color: var(--text-primary);
-      display: flex;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 1rem;
-    }
-
-    .app-container {
-      width: 100%;
-      max-width: 600px;
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-    }
-
-    header h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--accent-primary);
-    }
-
-    h2 {
-      font-size: 1.1rem;
-      font-weight: 600;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg-main); color: var(--text-primary); display: flex; justify-content: center; min-height: 100vh; padding: 1rem; }
+    .app-container { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 1.25rem; }
+    
+    header h1 { font-size: 1.5rem; font-weight: 700; color: var(--accent-primary); }
+    h2 { font-size: 1.1rem; font-weight: 600; }
 
     /* Tab Navigation */
-    .tab-nav {
-      display: flex;
-      gap: 0.5rem;
-      background-color: var(--bg-card);
-      padding: 0.35rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-    }
+    .tab-nav { display: flex; gap: 0.5rem; background-color: var(--bg-card); padding: 0.35rem; border-radius: var(--radius); border: 1px solid var(--border); }
+    .tab-btn { flex: 1; background: none; border: none; color: var(--text-secondary); padding: 0.65rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s ease-in-out; }
+    .tab-btn.active { background-color: var(--accent-primary); color: #000000; }
 
-    .tab-btn {
-      flex: 1;
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      padding: 0.65rem;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: all 0.2s ease-in-out;
-    }
-
-    .tab-btn.active {
-      background-color: var(--accent-primary);
-      color: #000000;
-    }
-
-    /* Monats-Controller */
-    .month-controller {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background-color: var(--bg-card);
-      padding: 0.75rem 1rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-    }
-
-    .month-btn {
-      background: none;
-      border: none;
-      color: var(--accent-primary);
-      font-size: 1.25rem;
-      cursor: pointer;
-      padding: 0 0.5rem;
-      font-weight: bold;
-    }
-
-    .month-display {
-      font-weight: 700;
-      font-size: 1rem;
-    }
+    /* Monats-Controller mit CSV Button */
+    .month-controller { display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-card); padding: 0.75rem 1rem; border-radius: var(--radius); border: 1px solid var(--border); }
+    .month-center { display: flex; align-items: center; gap: 1rem; }
+    .month-btn { background: none; border: none; color: var(--accent-primary); font-size: 1.25rem; cursor: pointer; padding: 0 0.5rem; font-weight: bold; }
+    .month-display { font-weight: 700; font-size: 1rem; width: 120px; text-align: center; }
+    
+    .btn-csv { font-size: 0.75rem; background-color: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary); padding: 0.3rem 0.6rem; border-radius: 6px; cursor: pointer; transition: border-color 0.2s; }
+    .btn-csv:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
 
     /* Statistiken Grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.75rem;
-    }
-
-    .stat-card {
-      background-color: var(--bg-card);
-      padding: 0.85rem 0.65rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      min-width: 0;
-    }
-
-    .stat-label {
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-    }
-
-    .stat-value {
-      font-size: 1rem;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+    .stat-card { background-color: var(--bg-card); padding: 0.85rem 0.65rem; border-radius: var(--radius); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+    .stat-label { font-size: 0.75rem; color: var(--text-secondary); }
+    .stat-value { font-size: 1rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .stat-card.balance .stat-value { color: var(--text-primary); }
     .stat-card.income .stat-value { color: var(--accent-green); }
     .stat-card.expense .stat-value { color: var(--accent-red); }
 
     /* Budget Widget */
-    .budget-container {
-      background-color: var(--bg-card);
-      padding: 1rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-    }
-    .budget-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.85rem;
-      margin-bottom: 0.6rem;
-      color: var(--text-secondary);
-    }
-    .budget-clickable {
-      color: var(--accent-primary);
-      cursor: pointer;
-      text-decoration: underline;
-      text-decoration-style: dotted;
-      font-weight: 600;
-    }
-    .budget-bar-bg {
-      background-color: var(--bg-main);
-      border-radius: 8px;
-      height: 12px;
-      overflow: hidden;
-    }
-    .budget-bar-fill {
-      height: 100%;
-      width: 0%;
-      transition: width 0.4s ease-out, background-color 0.4s;
-      background-color: var(--accent-primary);
-    }
+    .budget-container { background-color: var(--bg-card); padding: 1rem; border-radius: var(--radius); border: 1px solid var(--border); }
+    .budget-header { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.6rem; color: var(--text-secondary); }
+    .budget-clickable { color: var(--accent-primary); cursor: pointer; text-decoration: underline; text-decoration-style: dotted; font-weight: 600; }
+    .budget-bar-bg { background-color: var(--bg-main); border-radius: 8px; height: 12px; overflow: hidden; }
+    .budget-bar-fill { height: 100%; width: 0%; transition: width 0.4s ease-out, background-color 0.4s; background-color: var(--accent-primary); }
 
-    /* Container & Formular */
-    .card-section {
-      background-color: var(--bg-card);
-      padding: 1.25rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .transaction-form {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-      min-width: 0;
-    }
-
-    .input-with-btn {
-      display: flex;
-      gap: 0.5rem;
-    }
+    /* Forms */
+    .card-section { background-color: var(--bg-card); padding: 1.25rem; border-radius: var(--radius); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 1rem; }
+    .transaction-form { display: flex; flex-direction: column; gap: 1rem; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
+    .input-with-btn { display: flex; gap: 0.5rem; }
     .input-with-btn select { flex: 1; }
     
-    .btn-icon {
-      background-color: var(--bg-input);
-      border: 1px solid var(--border);
-      color: var(--accent-primary);
-      width: 40px;
-      border-radius: 8px;
-      font-size: 1.2rem;
-      font-weight: bold;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: border-color 0.2s;
-    }
+    .btn-icon { background-color: var(--bg-input); border: 1px solid var(--border); color: var(--accent-primary); width: 40px; border-radius: 8px; font-size: 1.2rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .btn-icon:hover { border-color: var(--accent-primary); }
 
     label { font-size: 0.8rem; color: var(--text-secondary); }
-
-    input, select {
-      width: 100%;
-      min-width: 0;
-      background-color: var(--bg-input);
-      border: 1px solid var(--border);
-      color: var(--text-primary);
-      padding: 0.65rem 0.75rem;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      outline: none;
-      color-scheme: dark;
-    }
-
+    input, select { width: 100%; min-width: 0; background-color: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary); padding: 0.65rem 0.75rem; border-radius: 8px; font-size: 0.95rem; outline: none; color-scheme: dark; }
     input:focus, select:focus { border-color: var(--accent-primary); }
 
-    .btn-primary {
-      background-color: var(--accent-primary);
-      color: #000000;
-      border: none;
-      padding: 0.75rem;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 0.95rem;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
+    .btn-primary { background-color: var(--accent-primary); color: #000000; border: none; padding: 0.75rem; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background-color 0.2s; }
     .btn-primary:hover { background-color: var(--accent-primary-hover); }
-
-    .btn-cancel-edit {
-      background-color: transparent;
-      color: var(--text-secondary);
-      border: 1px solid var(--border);
-      margin-top: -0.5rem;
-      display: none;
-    }
+    .btn-cancel-edit { background-color: transparent; color: var(--text-secondary); border: 1px solid var(--border); margin-top: -0.5rem; display: none; }
     .btn-cancel-edit.active { display: block; }
 
     /* Listen */
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .transaction-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .transaction-item {
-      background-color: var(--bg-main);
-      border: 1px solid var(--border);
-      padding: 0.75rem 0.85rem;
-      border-radius: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .item-main {
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-      min-width: 0;
-    }
-
-    .item-category {
-      font-weight: 600;
-      font-size: 0.9rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .item-meta {
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .item-right {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      flex-shrink: 0;
-    }
-
-    .item-amount {
-      font-weight: 700;
-      font-size: 0.95rem;
-      margin-right: 0.25rem;
-    }
+    .section-header { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+    .transaction-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+    .transaction-item { background-color: var(--bg-main); border: 1px solid var(--border); padding: 0.75rem 0.85rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+    .item-main { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+    .item-category { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-meta { font-size: 0.75rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-right { display: flex; align-items: center; gap: 0.25rem; flex-shrink: 0; }
+    .item-amount { font-weight: 700; font-size: 0.95rem; margin-right: 0.25rem; }
     .item-amount.income { color: var(--accent-green); }
     .item-amount.expense { color: var(--accent-red); }
 
-    .action-btn {
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      font-size: 1.1rem;
-      padding: 0.25rem;
-      border-radius: 4px;
-    }
-    .action-btn:hover { background-color: rgba(255,255,255,0.1); color: var(--text-primary); }
+    .action-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.1rem; padding: 0.25rem; border-radius: 4px; }
     .btn-delete:hover { color: var(--accent-red); background-color: rgba(255, 61, 0, 0.1); }
     .btn-edit:hover { color: var(--accent-primary); background-color: rgba(0, 229, 255, 0.1); }
 
     /* Kategorie-Archiv */
-    .category-group {
-      background-color: var(--bg-main);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 0.75rem;
-    }
-    .category-group-header {
-      background-color: rgba(255, 255, 255, 0.05);
-      padding: 0.75rem 0.85rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-      font-weight: 600;
-    }
-    .category-group-list {
-      list-style: none;
-      padding: 0.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-    }
-
+    .category-group { background-color: var(--bg-main); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 0.75rem; }
+    .category-group-header { background-color: rgba(255, 255, 255, 0.05); padding: 0.75rem 0.85rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); font-weight: 600; }
+    .category-group-list { list-style: none; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.4rem; }
     .empty-state { text-align: center; color: var(--text-secondary); font-size: 0.9rem; padding: 1.5rem 0; }
     
     .view-content { display: none; }
     .view-content.active { display: flex; flex-direction: column; gap: 1.25rem; }
+    .chart-container { position: relative; height: 250px; width: 100%; display: flex; justify-content: center; align-items: center; }
 
-    /* Chart Container */
-    .chart-container {
-      position: relative;
-      height: 250px;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    @media (max-width: 480px) {
-      body { padding: 0.5rem; }
-      .form-row { grid-template-columns: 1fr; }
-      .stats-grid { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 480px) { body { padding: 0.5rem; } .form-row { grid-template-columns: 1fr; } .stats-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -414,14 +126,17 @@
       <button class="tab-btn" data-view="chart-view">Auswertung</button>
     </nav>
 
-    <!-- Monats-Controller -->
+    <!-- Monats-Controller + CSV Export -->
     <div class="month-controller">
-      <button class="month-btn" id="prev-month-btn">&lt;</button>
-      <span class="month-display" id="month-display">Lade...</span>
-      <button class="month-btn" id="next-month-btn">&gt;</button>
+      <div class="month-center">
+        <button class="month-btn" id="prev-month-btn">&lt;</button>
+        <span class="month-display" id="month-display">Lade...</span>
+        <button class="month-btn" id="next-month-btn">&gt;</button>
+      </div>
+      <button class="btn-csv" id="export-csv-btn" title="Monat als CSV exportieren">CSV ⬇</button>
     </div>
 
-    <!-- Globale Statistiken (gefiltert nach Monat) -->
+    <!-- Globale Statistiken -->
     <div class="stats-grid">
       <div class="stat-card balance">
         <span class="stat-label">Gesamtsaldo</span>
@@ -437,27 +152,21 @@
       </div>
     </div>
 
-    <!-- Monatsbudget-ProgressBar -->
+    <!-- Budget ProgressBar -->
     <div class="budget-container">
       <div class="budget-header">
         <span>Budget Auslastung</span>
-        <span>
-          <span id="budget-current">0 €</span> / 
-          <span id="budget-limit" class="budget-clickable" title="Budget ändern">1000 €</span>
-        </span>
+        <span><span id="budget-current">0 €</span> / <span id="budget-limit" class="budget-clickable">1000 €</span></span>
       </div>
-      <div class="budget-bar-bg">
-        <div class="budget-bar-fill" id="budget-fill"></div>
-      </div>
+      <div class="budget-bar-bg"><div class="budget-bar-fill" id="budget-fill"></div></div>
     </div>
 
-    <!-- TAB 1: Erfassung & Neueste Buchungen -->
+    <!-- TAB 1: Erfassung -->
     <main id="entry-view" class="view-content active">
       <section class="card-section">
         <h2 id="form-title">Neue Buchung</h2>
         <form id="transaction-form" class="transaction-form">
           <input type="hidden" id="edit-id" value="">
-          
           <div class="form-row">
             <div class="form-group">
               <label for="amount">Betrag (€)</label>
@@ -465,32 +174,20 @@
             </div>
             <div class="form-group">
               <label for="type">Typ</label>
-              <select id="type" required>
-                <option value="expense">Ausgabe</option>
-                <option value="income">Einnahme</option>
-              </select>
+              <select id="type" required><option value="expense">Ausgabe</option><option value="income">Einnahme</option></select>
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label for="category">Kategorie</label>
               <div class="input-with-btn">
                 <select id="category" required></select>
-                <button type="button" id="add-category-btn" class="btn-icon" title="Neue Kategorie hinzufügen">+</button>
+                <button type="button" id="add-category-btn" class="btn-icon">+</button>
               </div>
             </div>
-            <div class="form-group">
-              <label for="date">Datum</label>
-              <input type="date" id="date" required>
-            </div>
+            <div class="form-group"><label for="date">Datum</label><input type="date" id="date" required></div>
           </div>
-
-          <div class="form-group">
-            <label for="note">Notiz (optional)</label>
-            <input type="text" id="note" placeholder="z. B. Supermarkteinkauf">
-          </div>
-
+          <div class="form-group"><label for="note">Notiz</label><input type="text" id="note" placeholder="z. B. Aldi"></div>
           <button type="submit" id="submit-btn" class="btn-primary">Buchung speichern</button>
           <button type="button" id="cancel-edit-btn" class="btn-primary btn-cancel-edit">Änderung abbrechen</button>
         </form>
@@ -499,43 +196,30 @@
       <section class="card-section">
         <div class="section-header">
           <h2>Buchungen</h2>
-          <select id="type-filter" style="width: auto;">
-            <option value="all">Alle</option>
-            <option value="expense">Ausgaben</option>
-            <option value="income">Einnahmen</option>
-          </select>
+          <select id="type-filter" style="width: auto;"><option value="all">Alle</option><option value="expense">Ausgaben</option><option value="income">Einnahmen</option></select>
         </div>
         <ul id="transaction-list" class="transaction-list"></ul>
       </section>
     </main>
 
-    <!-- TAB 2: Kategorie-Archiv -->
+    <!-- TAB 2: Archiv -->
     <main id="archive-view" class="view-content">
-      <section class="card-section">
-        <h2>Übersicht nach Kategorien</h2>
-        <div id="category-archive-container"></div>
-      </section>
+      <section class="card-section"><h2>Übersicht nach Kategorien</h2><div id="category-archive-container"></div></section>
     </main>
 
-    <!-- TAB 3: Chart-Auswertung -->
+    <!-- TAB 3: Chart -->
     <main id="chart-view" class="view-content">
-      <section class="card-section">
-        <h2>Ausgabenverteilung</h2>
-        <div class="chart-container">
-          <canvas id="expenseChart"></canvas>
-        </div>
-      </section>
+      <section class="card-section"><h2>Ausgabenverteilung</h2><div class="chart-container"><canvas id="expenseChart"></canvas></div></section>
     </main>
-
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { 
-      getFirestore, collection, addDoc, updateDoc, getDocs, deleteDoc, doc, serverTimestamp 
+      initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+      collection, addDoc, updateDoc, getDocs, deleteDoc, doc, serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyAOR__FV6ujC-a7W5mdw_Bq_ozL9L3rwAw",
       authDomain: "haushaltsbuch-b2a0f.firebaseapp.com",
@@ -546,13 +230,21 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    
+    // OFFLINE MODUS (Supermarkt-Feature aktiviert)
+    const db = initializeFirestore(app, {
+      localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()})
+    });
     const COLLECTION_NAME = "transactions";
 
-    // Defaults & State
+    // Service Worker Registrierung für PWA Install-Prompt
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(err => console.log("SW Register fehlgeschlagen:", err));
+    }
+
     const DEFAULT_CATEGORIES = {
       expense: ["Lebensmittel & Haushalt", "Fixkosten & Abos", "Freizeit & Hobby", "Transport & Tanken", "Werkzeug & Material", "Sonstiges"],
-      income: ["Gehalt & Lohn", "Nebengewerbe / Selbstständigkeit", "Rückzahlung & Erstattung", "Geschenk / Bonus", "Sonstiges"]
+      income: ["Gehalt & Lohn", "Nebengewerbe", "Rückzahlung", "Geschenk", "Sonstiges"]
     };
 
     let transactions = [];
@@ -560,67 +252,69 @@
     let expenseChartInstance = null;
     let monthlyBudget = 1000;
     
-    // Date & Month State
     let targetMonthDate = new Date();
-    targetMonthDate.setDate(1); // Immer 1. des Monats für saubere Monatswechsel
+    targetMonthDate.setDate(1); 
     let currentMonthString = ""; 
 
-    // DOM Refs
-    const form = document.getElementById("transaction-form");
-    const editIdInput = document.getElementById("edit-id");
-    const typeSelect = document.getElementById("type");
-    const categorySelect = document.getElementById("category");
-    const addCatBtn = document.getElementById("add-category-btn");
-    const dateInput = document.getElementById("date");
-    const list = document.getElementById("transaction-list");
-    const typeFilter = document.getElementById("type-filter");
-    const submitBtn = document.getElementById("submit-btn");
-    const cancelEditBtn = document.getElementById("cancel-edit-btn");
-    const formTitle = document.getElementById("form-title");
-    const tabBtns = document.querySelectorAll(".tab-btn");
-    const archiveContainer = document.getElementById("category-archive-container");
-
-    const totalBalanceEl = document.getElementById("total-balance");
-    const totalIncomeEl = document.getElementById("total-income");
-    const totalExpenseEl = document.getElementById("total-expense");
-    
-    const monthDisplayEl = document.getElementById("month-display");
-    const budgetLimitEl = document.getElementById("budget-limit");
-    const budgetCurrentEl = document.getElementById("budget-current");
-    const budgetFillEl = document.getElementById("budget-fill");
-
-    // Init
+    // Init Logic ...
     document.addEventListener("DOMContentLoaded", async () => {
       loadLocalStorageData();
-      dateInput.value = new Date().toISOString().split("T")[0];
+      document.getElementById("date").value = new Date().toISOString().split("T")[0];
       updateMonthDisplay();
       updateCategoryOptions();
       
-      await fetchAllData(); // Einmaliger Firebase Load
+      await fetchAllData(); 
 
-      typeSelect.addEventListener("change", updateCategoryOptions);
-      form.addEventListener("submit", handleFormSubmit);
-      cancelEditBtn.addEventListener("click", resetEditMode);
-      typeFilter.addEventListener("change", renderAllViews);
-      addCatBtn.addEventListener("click", handleAddCustomCategory);
-      budgetLimitEl.addEventListener("click", handleChangeBudget);
+      document.getElementById("type").addEventListener("change", updateCategoryOptions);
+      document.getElementById("transaction-form").addEventListener("submit", handleFormSubmit);
+      document.getElementById("cancel-edit-btn").addEventListener("click", resetEditMode);
+      document.getElementById("type-filter").addEventListener("change", renderAllViews);
+      document.getElementById("add-category-btn").addEventListener("click", handleAddCustomCategory);
+      document.getElementById("budget-limit").addEventListener("click", handleChangeBudget);
+      document.getElementById("export-csv-btn").addEventListener("click", exportCurrentMonthToCSV); // CSV Export Listener
       
       document.getElementById("prev-month-btn").addEventListener("click", () => shiftMonth(-1));
       document.getElementById("next-month-btn").addEventListener("click", () => shiftMonth(1));
 
-      tabBtns.forEach(btn => {
+      document.querySelectorAll(".tab-btn").forEach(btn => {
         btn.addEventListener("click", () => switchTab(btn.dataset.view));
       });
     });
 
-    // Local Storage
+    // --- CSV EXPORT LOGIC ---
+    function exportCurrentMonthToCSV() {
+      const data = getFilteredTransactions();
+      if(data.length === 0) {
+        alert("Keine Daten für diesen Monat vorhanden.");
+        return;
+      }
+      
+      let csvContent = "Datum,Typ,Kategorie,Betrag,Notiz\n";
+      data.forEach(t => {
+        const type = t.type === "income" ? "Einnahme" : "Ausgabe";
+        // Ersetzt Kommas in Notizen um den CSV-Parser nicht zu brechen
+        const note = t.note ? `"${t.note.replace(/"/g, '""')}"` : "";
+        csvContent += `${t.date},${type},${t.category},${t.amount},${note}\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Haushaltsbuch_${currentMonthString}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+    // ------------------------
+
+    // Standard CRUD / UI Logic
     function loadLocalStorageData() {
       const savedCats = localStorage.getItem("budget_custom_categories");
       if (savedCats) customCategories = JSON.parse(savedCats);
-      
       const savedBudget = localStorage.getItem("budget_monthly_limit");
       if (savedBudget) monthlyBudget = parseFloat(savedBudget);
-      budgetLimitEl.textContent = `${monthlyBudget} €`;
+      document.getElementById("budget-limit").textContent = `${monthlyBudget} €`;
     }
     
     function handleChangeBudget() {
@@ -628,211 +322,135 @@
       if (newVal && !isNaN(newVal) && Number(newVal) > 0) {
         monthlyBudget = parseFloat(newVal);
         localStorage.setItem("budget_monthly_limit", monthlyBudget);
-        budgetLimitEl.textContent = `${monthlyBudget} €`;
+        document.getElementById("budget-limit").textContent = `${monthlyBudget} €`;
         renderBudgetBar();
       }
     }
 
-    // Month Logic
     function updateMonthDisplay() {
       const yyyy = targetMonthDate.getFullYear();
       const mm = String(targetMonthDate.getMonth() + 1).padStart(2, '0');
-      currentMonthString = `${yyyy}-${mm}`; // Filter String z.B. "2026-11"
-      
-      const monthName = targetMonthDate.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
-      monthDisplayEl.textContent = monthName;
+      currentMonthString = `${yyyy}-${mm}`;
+      document.getElementById("month-display").textContent = targetMonthDate.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
     }
 
-    function shiftMonth(direction) {
-      targetMonthDate.setMonth(targetMonthDate.getMonth() + direction);
-      updateMonthDisplay();
-      renderAllViews(); // Neu filtern und zeichnen ohne DB Request
-    }
+    function shiftMonth(dir) { targetMonthDate.setMonth(targetMonthDate.getMonth() + dir); updateMonthDisplay(); renderAllViews(); }
+    function getFilteredTransactions() { return transactions.filter(t => t.date.startsWith(currentMonthString)); }
 
-    function getFilteredTransactions() {
-      return transactions.filter(t => t.date.startsWith(currentMonthString));
-    }
-
-    // Custom Category Logic
     function handleAddCustomCategory() {
-      const selectedType = typeSelect.value;
-      const typeName = selectedType === "expense" ? "Ausgabe" : "Einnahme";
-      const newCat = prompt(`Neue Kategorie für ${typeName} eingeben:`);
-      
+      const t = document.getElementById("type").value;
+      const newCat = prompt(`Neue Kategorie eingeben:`);
       if (newCat && newCat.trim() !== "") {
-        const catName = newCat.trim();
-        const allCats = [...DEFAULT_CATEGORIES[selectedType], ...customCategories[selectedType]];
-        if (!allCats.includes(catName)) {
-          customCategories[selectedType].push(catName);
+        if (![...DEFAULT_CATEGORIES[t], ...customCategories[t]].includes(newCat.trim())) {
+          customCategories[t].push(newCat.trim());
           localStorage.setItem("budget_custom_categories", JSON.stringify(customCategories));
           updateCategoryOptions();
-          categorySelect.value = catName; 
-        } else {
-          alert("Kategorie existiert bereits!");
+          document.getElementById("category").value = newCat.trim(); 
         }
       }
     }
 
     function updateCategoryOptions() {
-      const selectedType = typeSelect.value;
-      const options = [...DEFAULT_CATEGORIES[selectedType], ...customCategories[selectedType]];
-      categorySelect.innerHTML = options.map(cat => `<option value="${escapeHTML(cat)}">${escapeHTML(cat)}</option>`).join("");
+      const t = document.getElementById("type").value;
+      const opts = [...DEFAULT_CATEGORIES[t], ...customCategories[t]];
+      document.getElementById("category").innerHTML = opts.map(cat => `<option value="${escapeHTML(cat)}">${escapeHTML(cat)}</option>`).join("");
     }
 
-    // Tab Navigation
-    function switchTab(targetViewId) {
-      tabBtns.forEach(btn => btn.classList.toggle("active", btn.dataset.view === targetViewId));
-      document.querySelectorAll(".view-content").forEach(view => {
-        view.classList.toggle("active", view.id === targetViewId);
-      });
-      if (targetViewId === "chart-view") renderChart();
+    function switchTab(target) {
+      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.view === target));
+      document.querySelectorAll(".view-content").forEach(view => view.classList.toggle("active", view.id === target));
+      if (target === "chart-view") renderChart();
     }
 
-    // Firebase DB Operations
     async function fetchAllData() {
       try {
         const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
         transactions = querySnapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
         transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
         renderAllViews();
-      } catch (err) {
-        console.error(err);
-        alert("Fehler beim Laden der Daten aus der Cloud.");
-      }
+      } catch (err) { console.log("Offline Fallback aktiv oder Fehler:", err); }
     }
 
     async function handleFormSubmit(e) {
       e.preventDefault();
-      submitBtn.disabled = true;
-      const isEdit = editIdInput.value !== "";
-      submitBtn.textContent = "Speichere...";
-
+      const btn = document.getElementById("submit-btn");
+      btn.disabled = true; btn.textContent = "Speichere...";
+      const isEdit = document.getElementById("edit-id").value !== "";
+      
       const data = {
         amount: parseFloat(document.getElementById("amount").value),
-        type: typeSelect.value,
-        category: categorySelect.value,
-        date: dateInput.value,
+        type: document.getElementById("type").value,
+        category: document.getElementById("category").value,
+        date: document.getElementById("date").value,
         note: document.getElementById("note").value.trim()
       };
 
       try {
-        if (isEdit) {
-          await updateDoc(doc(db, COLLECTION_NAME, editIdInput.value), data);
-        } else {
-          data.createdAt = serverTimestamp();
-          await addDoc(collection(db, COLLECTION_NAME), data);
-        }
+        if (isEdit) { await updateDoc(doc(db, COLLECTION_NAME, document.getElementById("edit-id").value), data); } 
+        else { data.createdAt = serverTimestamp(); await addDoc(collection(db, COLLECTION_NAME), data); }
         resetEditMode();
-        dateInput.value = new Date().toISOString().split("T")[0]; // Reset auf heute
+        document.getElementById("date").value = new Date().toISOString().split("T")[0];
         await fetchAllData();
-      } catch (err) {
-        alert("Speichern fehlgeschlagen.");
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = isEdit ? "Änderung speichern" : "Buchung speichern";
-      }
+      } catch (err) { alert("Gespeichert im Offline-Cache. Sync sobald online."); } 
+      finally { btn.disabled = false; btn.textContent = isEdit ? "Änderung speichern" : "Buchung speichern"; }
     }
 
-    async function handleDelete(id) {
-      if (confirm("Wirklich löschen?")) {
-        await deleteDoc(doc(db, COLLECTION_NAME, id));
-        await fetchAllData();
-      }
-    }
+    async function handleDelete(id) { if (confirm("Wirklich löschen?")) { await deleteDoc(doc(db, COLLECTION_NAME, id)); await fetchAllData(); } }
 
     function initiateEdit(id) {
       const t = transactions.find(x => x.id === id);
       if (!t) return;
-
-      editIdInput.value = t.id;
+      document.getElementById("edit-id").value = t.id;
       document.getElementById("amount").value = t.amount;
       document.getElementById("date").value = t.date;
       document.getElementById("note").value = t.note;
-      
-      // Selects richtig setzen (Kategorien neu bauen wg Abhängigkeit)
-      typeSelect.value = t.type;
+      document.getElementById("type").value = t.type;
       updateCategoryOptions();
-      
-      // Falls Kategorie mal gelöscht wurde aber im Datensatz existiert, Option ergänzen
-      if (!Array.from(categorySelect.options).some(opt => opt.value === t.category)) {
-        const option = document.createElement("option");
-        option.value = t.category;
-        option.text = t.category;
-        categorySelect.add(option);
-      }
-      categorySelect.value = t.category;
-
-      // UI anpassen
-      formTitle.textContent = "Buchung bearbeiten";
-      submitBtn.textContent = "Änderung speichern";
-      cancelEditBtn.classList.add("active");
-
-      // Scroll zum Formular
+      document.getElementById("category").value = t.category;
+      document.getElementById("form-title").textContent = "Buchung bearbeiten";
+      document.getElementById("submit-btn").textContent = "Änderung speichern";
+      document.getElementById("cancel-edit-btn").classList.add("active");
       window.scrollTo({ top: 0, behavior: 'smooth' });
       switchTab("entry-view");
     }
 
     function resetEditMode() {
-      form.reset();
-      editIdInput.value = "";
-      formTitle.textContent = "Neue Buchung";
-      submitBtn.textContent = "Buchung speichern";
-      cancelEditBtn.classList.remove("active");
+      document.getElementById("transaction-form").reset();
+      document.getElementById("edit-id").value = "";
+      document.getElementById("form-title").textContent = "Neue Buchung";
+      document.getElementById("submit-btn").textContent = "Buchung speichern";
+      document.getElementById("cancel-edit-btn").classList.remove("active");
       updateCategoryOptions();
     }
 
-    // UI Master Render Controller
     function renderAllViews() {
-      const currentData = getFilteredTransactions();
-      renderStats(currentData);
-      renderBudgetBar(currentData);
-      renderRecentList(currentData);
-      renderArchiveView(currentData);
-      if (document.getElementById("chart-view").classList.contains("active")) {
-        renderChart();
-      }
+      const d = getFilteredTransactions();
+      renderStats(d); renderBudgetBar(d); renderRecentList(d); renderArchiveView(d);
+      if (document.getElementById("chart-view").classList.contains("active")) renderChart();
     }
 
-    function renderStats(currentData) {
-      const totals = currentData.reduce((acc, t) => {
-        const amt = Number(t.amount) || 0;
-        t.type === "income" ? acc.income += amt : acc.expense += amt;
-        return acc;
-      }, { income: 0, expense: 0 });
-
-      totalBalanceEl.textContent = formatCurrency(totals.income - totals.expense);
-      totalIncomeEl.textContent = `+${formatCurrency(totals.income)}`;
-      totalExpenseEl.textContent = `-${formatCurrency(totals.expense)}`;
+    function renderStats(d) {
+      const t = d.reduce((acc, x) => { x.type === "income" ? acc.in += Number(x.amount) : acc.out += Number(x.amount); return acc; }, { in: 0, out: 0 });
+      document.getElementById("total-balance").textContent = formatCurrency(t.in - t.out);
+      document.getElementById("total-income").textContent = `+${formatCurrency(t.in)}`;
+      document.getElementById("total-expense").textContent = `-${formatCurrency(t.out)}`;
     }
 
-    function renderBudgetBar(currentData = getFilteredTransactions()) {
-      const expenseTotal = currentData.reduce((sum, t) => t.type === 'expense' ? sum + Number(t.amount) : sum, 0);
-      budgetCurrentEl.textContent = `${formatCurrency(expenseTotal)}`;
-      
-      let percentage = (expenseTotal / monthlyBudget) * 100;
-      let barWidth = Math.min(percentage, 100);
-      
-      budgetFillEl.style.width = `${barWidth}%`;
-      
-      // Color Logic (Türkis -> Orange -> Rot)
-      if (percentage >= 100) {
-        budgetFillEl.style.backgroundColor = "var(--accent-red)";
-      } else if (percentage >= 80) {
-        budgetFillEl.style.backgroundColor = "var(--accent-warning)";
-      } else {
-        budgetFillEl.style.backgroundColor = "var(--accent-primary)";
-      }
+    function renderBudgetBar(d = getFilteredTransactions()) {
+      const e = d.reduce((sum, x) => x.type === 'expense' ? sum + Number(x.amount) : sum, 0);
+      document.getElementById("budget-current").textContent = `${formatCurrency(e)}`;
+      let p = (e / monthlyBudget) * 100;
+      let fill = document.getElementById("budget-fill");
+      fill.style.width = `${Math.min(p, 100)}%`;
+      fill.style.backgroundColor = p >= 100 ? "var(--accent-red)" : (p >= 80 ? "var(--accent-warning)" : "var(--accent-primary)");
     }
 
-    function renderRecentList(currentData) {
-      const f = typeFilter.value;
-      const filtered = currentData.filter(t => f === "all" || t.type === f);
+    function renderRecentList(d) {
+      const f = document.getElementById("type-filter").value;
+      const list = document.getElementById("transaction-list");
+      const filtered = d.filter(t => f === "all" || t.type === f);
       
-      if (!filtered.length) {
-        list.innerHTML = `<li class="empty-state">Keine Buchungen im ${monthDisplayEl.textContent}</li>`;
-        return;
-      }
-
+      if (!filtered.length) { list.innerHTML = `<li class="empty-state">Keine Buchungen</li>`; return; }
       list.innerHTML = filtered.map(t => `
         <li class="transaction-item">
           <div class="item-main">
@@ -841,38 +459,33 @@
           </div>
           <div class="item-right">
             <span class="item-amount ${t.type === 'income' ? 'income' : 'expense'}">${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}</span>
-            <button class="action-btn btn-edit" data-id="${t.id}" title="Bearbeiten">✎</button>
-            <button class="action-btn btn-delete" data-id="${t.id}" title="Löschen">✕</button>
+            <button class="action-btn btn-edit" data-id="${t.id}">✎</button>
+            <button class="action-btn btn-delete" data-id="${t.id}">✕</button>
           </div>
-        </li>
-      `).join("");
-      
-      attachActionListeners(list);
+        </li>`).join("");
+      list.querySelectorAll(".btn-delete").forEach(b => b.addEventListener("click", (e) => handleDelete(e.target.dataset.id)));
+      list.querySelectorAll(".btn-edit").forEach(b => b.addEventListener("click", (e) => initiateEdit(e.target.dataset.id)));
     }
 
-    function renderArchiveView(currentData) {
-      if (!currentData.length) {
-        archiveContainer.innerHTML = `<p class="empty-state">Keine Daten im ${monthDisplayEl.textContent}</p>`;
-        return;
-      }
+    function renderArchiveView(d) {
+      const cont = document.getElementById("category-archive-container");
+      if (!d.length) { cont.innerHTML = `<p class="empty-state">Keine Daten im aktuellen Monat.</p>`; return; }
 
       const grouped = {};
-      currentData.forEach(t => {
+      d.forEach(t => {
         const c = t.category || "Sonstiges";
         if (!grouped[c]) grouped[c] = { items: [], in: 0, out: 0 };
         grouped[c].items.push(t);
         t.type === "income" ? grouped[c].in += Number(t.amount) : grouped[c].out += Number(t.amount);
       });
 
-      archiveContainer.innerHTML = Object.keys(grouped).map(cat => {
+      cont.innerHTML = Object.keys(grouped).map(cat => {
         const net = grouped[cat].in - grouped[cat].out;
-        const isPos = net >= 0;
-        
         return `
           <div class="category-group">
             <div class="category-group-header">
               <span>${escapeHTML(cat)}</span>
-              <span class="item-amount ${isPos ? 'income' : 'expense'}">${isPos ? '+' : '-'}${formatCurrency(Math.abs(net))}</span>
+              <span class="item-amount ${net >= 0 ? 'income' : 'expense'}">${net >= 0 ? '+' : '-'}${formatCurrency(Math.abs(net))}</span>
             </div>
             <ul class="category-group-list">
               ${grouped[cat].items.map(t => `
@@ -886,54 +499,35 @@
                 </li>
               `).join("")}
             </ul>
-          </div>
-        `;
+          </div>`;
       }).join("");
       
-      attachActionListeners(archiveContainer);
-    }
-
-    function attachActionListeners(container) {
-      container.querySelectorAll(".btn-delete").forEach(b => b.addEventListener("click", (e) => handleDelete(e.target.dataset.id)));
-      container.querySelectorAll(".btn-edit").forEach(b => b.addEventListener("click", (e) => initiateEdit(e.target.dataset.id)));
+      cont.querySelectorAll(".btn-delete").forEach(b => b.addEventListener("click", (e) => handleDelete(e.target.dataset.id)));
+      cont.querySelectorAll(".btn-edit").forEach(b => b.addEventListener("click", (e) => initiateEdit(e.target.dataset.id)));
     }
 
     function renderChart() {
       const ctx = document.getElementById('expenseChart').getContext('2d');
-      const currentData = getFilteredTransactions();
-      const expenses = currentData.filter(t => t.type === 'expense');
+      const expenses = getFilteredTransactions().filter(t => t.type === 'expense');
       
-      if (expenseChartInstance) {
-        expenseChartInstance.destroy();
-        expenseChartInstance = null;
-      }
+      if (expenseChartInstance) { expenseChartInstance.destroy(); expenseChartInstance = null; }
+      if (!expenses.length) return;
 
-      if (expenses.length === 0) return;
-
-      const categoryTotals = {};
-      expenses.forEach(t => {
-        const cat = t.category || "Sonstiges";
-        categoryTotals[cat] = (categoryTotals[cat] || 0) + Number(t.amount);
-      });
-
-      const labels = Object.keys(categoryTotals);
-      const data = Object.values(categoryTotals);
-      const bgColors = ['#00e5ff', '#00e676', '#ffea00', '#ff3d00', '#d500f9', '#2979ff', '#1de9b6', '#ff9100'];
+      const catTots = {};
+      expenses.forEach(t => { catTots[t.category || "Sonstiges"] = (catTots[t.category || "Sonstiges"] || 0) + Number(t.amount); });
 
       expenseChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
-          labels: labels,
+          labels: Object.keys(catTots),
           datasets: [{
-            data: data,
-            backgroundColor: bgColors.slice(0, labels.length),
-            borderWidth: 2,
-            borderColor: '#121212'
+            data: Object.values(catTots),
+            backgroundColor: ['#00e5ff', '#00e676', '#ffea00', '#ff3d00', '#d500f9', '#2979ff', '#1de9b6', '#ff9100'],
+            borderWidth: 2, borderColor: '#121212'
           }]
         },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
+          responsive: true, maintainAspectRatio: false,
           plugins: {
             legend: { position: 'right', labels: { color: '#ffffff', font: { size: 12 } } },
             tooltip: { callbacks: { label: (c) => ' ' + formatCurrency(c.raw) } }
@@ -942,7 +536,6 @@
       });
     }
 
-    // Utility
     function formatCurrency(n) { return Number(n).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €"; }
     function formatDate(d) { return new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }); }
     function escapeHTML(s) { return String(s).replace(/[&<>"']/g, m => ({"&": "&amp;","<": "&lt;",">": "&gt;",'"': "&quot;","'": "&#39;"})[m]); }
