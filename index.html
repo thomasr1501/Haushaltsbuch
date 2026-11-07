@@ -4,17 +4,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Haushaltsbuch PWA</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
   <style>
     :root {
-      --bg-main: #0f172a;
-      --bg-card: #1e293b;
-      --bg-input: #0f172a;
-      --text-primary: #f8fafc;
-      --text-secondary: #94a3b8;
-      --border: #334155;
-      --accent-green: #22c55e;
-      --accent-red: #ef4444;
-      --accent-blue: #3b82f6;
+      /* Fitness App Theme: Schwarz & Türkis */
+      --bg-main: #000000;
+      --bg-card: #121212;
+      --bg-input: #1a1a1a;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0a0;
+      --border: #2a2a2a;
+      
+      /* Akzente */
+      --accent-primary: #00e5ff; /* Leuchtendes Türkis */
+      --accent-primary-hover: #00cce6;
+      --accent-green: #00e676;
+      --accent-red: #ff3d00;
+      
       --radius: 12px;
     }
 
@@ -45,6 +53,7 @@
     header h1 {
       font-size: 1.5rem;
       font-weight: 700;
+      color: var(--accent-primary);
     }
 
     h2 {
@@ -70,14 +79,14 @@
       padding: 0.65rem;
       border-radius: 8px;
       font-weight: 600;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       cursor: pointer;
       transition: all 0.2s ease-in-out;
     }
 
     .tab-btn.active {
-      background-color: var(--accent-blue);
-      color: white;
+      background-color: var(--accent-primary);
+      color: #000000; /* Dunkler Text für Kontrast auf Türkis */
     }
 
     /* Statistiken Grid */
@@ -145,6 +154,32 @@
       min-width: 0;
     }
 
+    /* Custom Category Input Wrapper */
+    .input-with-btn {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .input-with-btn select {
+      flex: 1;
+    }
+    .btn-icon {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--accent-primary);
+      width: 40px;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s;
+    }
+    .btn-icon:hover {
+      border-color: var(--accent-primary);
+    }
+
     label {
       font-size: 0.8rem;
       color: var(--text-secondary);
@@ -160,29 +195,30 @@
       border-radius: 8px;
       font-size: 0.95rem;
       outline: none;
+      color-scheme: dark; /* Wichtig für Kalender-Popup in dunkel */
     }
 
     input:focus, select:focus {
-      border-color: var(--accent-blue);
+      border-color: var(--accent-primary);
     }
 
     .btn-primary {
-      background-color: var(--accent-blue);
-      color: white;
+      background-color: var(--accent-primary);
+      color: #000000;
       border: none;
       padding: 0.75rem;
       border-radius: 8px;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 0.95rem;
       cursor: pointer;
-      transition: opacity 0.2s;
+      transition: background-color 0.2s;
     }
 
     .btn-primary:hover {
-      opacity: 0.9;
+      background-color: var(--accent-primary-hover);
     }
 
-    /* Listen & Historie */
+    /* Listen */
     .section-header {
       display: flex;
       justify-content: space-between;
@@ -258,10 +294,10 @@
 
     .btn-delete:hover {
       color: var(--accent-red);
-      background-color: rgba(239, 68, 68, 0.1);
+      background-color: rgba(255, 61, 0, 0.1);
     }
 
-    /* Kategorie-Archiv Gruppierung */
+    /* Kategorie-Archiv */
     .category-group {
       background-color: var(--bg-main);
       border: 1px solid var(--border);
@@ -271,7 +307,7 @@
     }
 
     .category-group-header {
-      background-color: rgba(255, 255, 255, 0.03);
+      background-color: rgba(255, 255, 255, 0.05);
       padding: 0.75rem 0.85rem;
       display: flex;
       justify-content: space-between;
@@ -305,19 +341,20 @@
       gap: 1.25rem;
     }
 
-    /* Responsives Verhalten für Mobile Screens */
+    /* Chart Container */
+    .chart-container {
+      position: relative;
+      height: 250px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
     @media (max-width: 480px) {
-      body {
-        padding: 0.5rem;
-      }
-
-      .form-row {
-        grid-template-columns: 1fr;
-      }
-
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
+      body { padding: 0.5rem; }
+      .form-row { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -331,7 +368,8 @@
     <!-- Navigation Tabs -->
     <nav class="tab-nav">
       <button class="tab-btn active" data-view="entry-view">Erfassung</button>
-      <button class="tab-btn" data-view="archive-view">Kategorie-Übersicht</button>
+      <button class="tab-btn" data-view="archive-view">Kategorien</button>
+      <button class="tab-btn" data-view="chart-view">Auswertung</button>
     </nav>
 
     <!-- Globale Statistiken -->
@@ -372,9 +410,12 @@
           <div class="form-row">
             <div class="form-group">
               <label for="category">Kategorie</label>
-              <select id="category" required>
-                <!-- Wird per JavaScript befüllt -->
-              </select>
+              <div class="input-with-btn">
+                <select id="category" required>
+                  <!-- Wird per JavaScript befüllt -->
+                </select>
+                <button type="button" id="add-category-btn" class="btn-icon" title="Neue Kategorie hinzufügen">+</button>
+              </div>
             </div>
             <div class="form-group">
               <label for="date">Datum</label>
@@ -400,10 +441,7 @@
             <option value="income">Einnahmen</option>
           </select>
         </div>
-
-        <ul id="transaction-list" class="transaction-list">
-          <!-- Dynamischer Inhalt -->
-        </ul>
+        <ul id="transaction-list" class="transaction-list"></ul>
       </section>
     </main>
 
@@ -411,8 +449,16 @@
     <main id="archive-view" class="view-content">
       <section class="card-section">
         <h2>Übersicht nach Kategorien</h2>
-        <div id="category-archive-container">
-          <!-- Gruppierte Einträge -->
+        <div id="category-archive-container"></div>
+      </section>
+    </main>
+
+    <!-- TAB 3: Chart-Auswertung -->
+    <main id="chart-view" class="view-content">
+      <section class="card-section">
+        <h2>Ausgabenverteilung</h2>
+        <div class="chart-container">
+          <canvas id="expenseChart"></canvas>
         </div>
       </section>
     </main>
@@ -422,13 +468,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { 
-      getFirestore, 
-      collection, 
-      addDoc, 
-      getDocs, 
-      deleteDoc, 
-      doc, 
-      serverTimestamp 
+      getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     // Firebase Konfiguration
@@ -445,32 +485,22 @@
     const db = getFirestore(app);
     const COLLECTION_NAME = "transactions";
 
-    // Kategorien Zuordnung
-    const CATEGORIES = {
-      expense: [
-        "Lebensmittel & Haushalt",
-        "Fixkosten & Abos",
-        "Freizeit & Hobby",
-        "Transport & Tanken",
-        "Werkzeug & Material",
-        "Sonstiges"
-      ],
-      income: [
-        "Gehalt & Lohn",
-        "Nebengewerbe / Selbstständigkeit",
-        "Rückzahlung & Erstattung",
-        "Geschenk / Bonus",
-        "Sonstiges"
-      ]
+    // Basis-Kategorien
+    const DEFAULT_CATEGORIES = {
+      expense: ["Lebensmittel & Haushalt", "Fixkosten & Abos", "Freizeit & Hobby", "Transport & Tanken", "Werkzeug & Material", "Sonstiges"],
+      income: ["Gehalt & Lohn", "Nebengewerbe / Selbstständigkeit", "Rückzahlung & Erstattung", "Geschenk / Bonus", "Sonstiges"]
     };
 
     // State
     let transactions = [];
+    let customCategories = { expense: [], income: [] };
+    let expenseChartInstance = null; // Hält die Chart-Instanz
 
     // DOM Referenzen
     const form = document.getElementById("transaction-form");
     const typeSelect = document.getElementById("type");
     const categorySelect = document.getElementById("category");
+    const addCatBtn = document.getElementById("add-category-btn");
     const dateInput = document.getElementById("date");
     const list = document.getElementById("transaction-list");
     const typeFilter = document.getElementById("type-filter");
@@ -484,6 +514,7 @@
 
     // Init
     document.addEventListener("DOMContentLoaded", async () => {
+      loadCustomCategories();
       dateInput.value = new Date().toISOString().split("T")[0];
       updateCategoryOptions();
       
@@ -492,253 +523,279 @@
       typeSelect.addEventListener("change", updateCategoryOptions);
       form.addEventListener("submit", handleFormSubmit);
       typeFilter.addEventListener("change", renderRecentList);
+      addCatBtn.addEventListener("click", handleAddCustomCategory);
 
       tabBtns.forEach(btn => {
         btn.addEventListener("click", () => switchTab(btn.dataset.view));
       });
     });
 
-    // Dynamische Kategorien anpassen
+    // Custom Kategorien laden/speichern
+    function loadCustomCategories() {
+      const saved = localStorage.getItem("budget_custom_categories");
+      if (saved) customCategories = JSON.parse(saved);
+    }
+    
+    function saveCustomCategories() {
+      localStorage.setItem("budget_custom_categories", JSON.stringify(customCategories));
+    }
+
+    function handleAddCustomCategory() {
+      const selectedType = typeSelect.value;
+      const typeName = selectedType === "expense" ? "Ausgabe" : "Einnahme";
+      const newCat = prompt(`Neue Kategorie für ${typeName} eingeben:`);
+      
+      if (newCat && newCat.trim() !== "") {
+        const catName = newCat.trim();
+        // Prüfen ob bereits vorhanden
+        const allCats = [...DEFAULT_CATEGORIES[selectedType], ...customCategories[selectedType]];
+        if (!allCats.includes(catName)) {
+          customCategories[selectedType].push(catName);
+          saveCustomCategories();
+          updateCategoryOptions();
+          categorySelect.value = catName; // Direkt auswählen
+        } else {
+          alert("Kategorie existiert bereits!");
+        }
+      }
+    }
+
     function updateCategoryOptions() {
       const selectedType = typeSelect.value;
-      const options = CATEGORIES[selectedType] || [];
+      const options = [...DEFAULT_CATEGORIES[selectedType], ...customCategories[selectedType]];
       categorySelect.innerHTML = options.map(cat => `<option value="${escapeHTML(cat)}">${escapeHTML(cat)}</option>`).join("");
     }
 
-    // Tab Wechsel
+    // Tab Navigation
     function switchTab(targetViewId) {
-      tabBtns.forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.view === targetViewId);
-      });
+      tabBtns.forEach(btn => btn.classList.toggle("active", btn.dataset.view === targetViewId));
       document.querySelectorAll(".view-content").forEach(view => {
-        view.classList.toggle("active", view.id === targetViewId);
+        const isActive = view.id === targetViewId;
+        view.classList.toggle("active", isActive);
       });
+
+      // Chart neu zeichnen wenn Tab aktiv wird
+      if (targetViewId === "chart-view") {
+        renderChart();
+      }
     }
 
     // DB Operationen
-    async function addTransactionToDB(data) {
-      return await addDoc(collection(db, COLLECTION_NAME), {
-        amount: parseFloat(data.amount),
-        type: data.type,
-        category: data.category,
-        date: data.date,
-        note: data.note || "",
-        createdAt: serverTimestamp()
-      });
-    }
-
-    async function getTransactionsFromDB() {
-      const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
-      const items = querySnapshot.docs.map(docSnap => ({
-        id: docSnap.id,
-        ...docSnap.data()
-      }));
-      return items.sort((a, b) => new Date(b.date) - new Date(a.date));
-    }
-
-    async function deleteTransactionFromDB(id) {
-      await deleteDoc(doc(db, COLLECTION_NAME, id));
-    }
-
-    // UI Rendering
     async function loadAndRenderData() {
       list.innerHTML = `<li class="empty-state">Lade Buchungen...</li>`;
-      archiveContainer.innerHTML = `<p class="empty-state">Lade Kategorien...</p>`;
       try {
-        transactions = await getTransactionsFromDB();
+        const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
+        transactions = querySnapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+        transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
         renderStats();
         renderRecentList();
         renderArchiveView();
+        
+        // Chart updaten falls wir gerade im Chart-Tab sind
+        if (document.getElementById("chart-view").classList.contains("active")) {
+          renderChart();
+        }
       } catch (err) {
         console.error(err);
-        list.innerHTML = `<li class="empty-state" style="color: var(--accent-red);">Fehler beim Laden der Daten!</li>`;
+        list.innerHTML = `<li class="empty-state" style="color: var(--accent-red);">Fehler beim Laden</li>`;
       }
     }
 
     async function handleFormSubmit(e) {
       e.preventDefault();
-
-      const formData = {
-        amount: document.getElementById("amount").value,
-        type: typeSelect.value,
-        category: categorySelect.value,
-        date: dateInput.value,
-        note: document.getElementById("note").value.trim()
-      };
-
       submitBtn.disabled = true;
       submitBtn.textContent = "Speichere...";
 
       try {
-        await addTransactionToDB(formData);
+        await addDoc(collection(db, COLLECTION_NAME), {
+          amount: parseFloat(document.getElementById("amount").value),
+          type: typeSelect.value,
+          category: categorySelect.value,
+          date: dateInput.value,
+          note: document.getElementById("note").value.trim(),
+          createdAt: serverTimestamp()
+        });
         form.reset();
         dateInput.value = new Date().toISOString().split("T")[0];
         updateCategoryOptions();
         await loadAndRenderData();
       } catch (err) {
-        alert("Speichern fehlgeschlagen.");
+        alert("Fehler!");
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = "Buchung speichern";
+        submitBtn.textContent = "Speichern";
       }
-    }
-
-    function renderStats() {
-      const totals = transactions.reduce((acc, t) => {
-        const amount = Number(t.amount) || 0;
-        if (t.type === "income") {
-          acc.income += amount;
-        } else {
-          acc.expense += amount;
-        }
-        return acc;
-      }, { income: 0, expense: 0 });
-
-      const balance = totals.income - totals.expense;
-
-      totalBalanceEl.textContent = formatCurrency(balance);
-      totalIncomeEl.textContent = `+${formatCurrency(totals.income)}`;
-      totalExpenseEl.textContent = `-${formatCurrency(totals.expense)}`;
-    }
-
-    function renderRecentList() {
-      const selectedType = typeFilter.value;
-      const filtered = transactions.filter(t => selectedType === "all" || t.type === selectedType);
-
-      if (filtered.length === 0) {
-        list.innerHTML = `<li class="empty-state">Keine Buchungen vorhanden.</li>`;
-        return;
-      }
-
-      list.innerHTML = filtered.map(item => {
-        const isIncome = item.type === "income";
-        const prefix = isIncome ? "+" : "-";
-        const amountClass = isIncome ? "income" : "expense";
-        const formattedDate = new Date(item.date).toLocaleDateString("de-DE", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric"
-        });
-
-        return `
-          <li class="transaction-item">
-            <div class="item-main">
-              <span class="item-category">${escapeHTML(item.category)}</span>
-              <span class="item-meta">${formattedDate}${item.note ? ` • ${escapeHTML(item.note)}` : ""}</span>
-            </div>
-            <div class="item-right">
-              <span class="item-amount ${amountClass}">${prefix}${formatCurrency(item.amount)}</span>
-              <button class="btn-delete" data-id="${item.id}" title="Löschen">✕</button>
-            </div>
-          </li>
-        `;
-      }).join("");
-
-      list.querySelectorAll(".btn-delete").forEach(btn => {
-        btn.addEventListener("click", handleDelete);
-      });
-    }
-
-    function renderArchiveView() {
-      if (transactions.length === 0) {
-        archiveContainer.innerHTML = `<p class="empty-state">Keine Buchungen für das Archiv vorhanden.</p>`;
-        return;
-      }
-
-      // Gruppierung nach Kategorie
-      const grouped = {};
-      transactions.forEach(t => {
-        const cat = t.category || "Sonstiges";
-        if (!grouped[cat]) {
-          grouped[cat] = {
-            items: [],
-            incomeTotal: 0,
-            expenseTotal: 0
-          };
-        }
-        grouped[cat].items.push(t);
-        if (t.type === "income") {
-          grouped[cat].incomeTotal += Number(t.amount) || 0;
-        } else {
-          grouped[cat].expenseTotal += Number(t.amount) || 0;
-        }
-      });
-
-      archiveContainer.innerHTML = Object.keys(grouped).map(catName => {
-        const group = grouped[catName];
-        const net = group.incomeTotal - group.expenseTotal;
-        const isPositive = net >= 0;
-        const totalClass = isPositive ? "income" : "expense";
-        const prefix = isPositive ? "+" : "-";
-
-        const itemsHTML = group.items.map(item => {
-          const isIncome = item.type === "income";
-          const formattedDate = new Date(item.date).toLocaleDateString("de-DE", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric"
-          });
-
-          return `
-            <li class="transaction-item">
-              <div class="item-main">
-                <span class="item-meta">${formattedDate}${item.note ? ` • ${escapeHTML(item.note)}` : ""}</span>
-              </div>
-              <div class="item-right">
-                <span class="item-amount ${isIncome ? 'income' : 'expense'}">${isIncome ? '+' : '-'}${formatCurrency(item.amount)}</span>
-                <button class="btn-delete" data-id="${item.id}" title="Löschen">✕</button>
-              </div>
-            </li>
-          `;
-        }).join("");
-
-        return `
-          <div class="category-group">
-            <div class="category-group-header">
-              <span>${escapeHTML(catName)}</span>
-              <span class="item-amount ${totalClass}">${prefix}${formatCurrency(Math.abs(net))}</span>
-            </div>
-            <ul class="category-group-list">
-              ${itemsHTML}
-            </ul>
-          </div>
-        `;
-      }).join("");
-
-      archiveContainer.querySelectorAll(".btn-delete").forEach(btn => {
-        btn.addEventListener("click", handleDelete);
-      });
     }
 
     async function handleDelete(e) {
       const id = e.target.getAttribute("data-id");
       if (!id) return;
-
-      if (confirm("Möchtest du diese Buchung wirklich löschen?")) {
-        try {
-          await deleteTransactionFromDB(id);
-          await loadAndRenderData();
-        } catch (err) {
-          alert("Löschen fehlgeschlagen.");
-        }
+      if (confirm("Löschen?")) {
+        await deleteDoc(doc(db, COLLECTION_NAME, id));
+        await loadAndRenderData();
       }
     }
 
-    function formatCurrency(num) {
-      return Number(num).toLocaleString("de-DE", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }) + " €";
+    // UI Rendering
+    function renderStats() {
+      const totals = transactions.reduce((acc, t) => {
+        const amt = Number(t.amount) || 0;
+        t.type === "income" ? acc.income += amt : acc.expense += amt;
+        return acc;
+      }, { income: 0, expense: 0 });
+
+      totalBalanceEl.textContent = formatCurrency(totals.income - totals.expense);
+      totalIncomeEl.textContent = `+${formatCurrency(totals.income)}`;
+      totalExpenseEl.textContent = `-${formatCurrency(totals.expense)}`;
     }
 
-    function escapeHTML(str) {
-      return String(str).replace(/[&<>"']/g, match => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-      })[match]);
+    function renderRecentList() {
+      const f = typeFilter.value;
+      const filtered = transactions.filter(t => f === "all" || t.type === f);
+      
+      if (!filtered.length) {
+        list.innerHTML = `<li class="empty-state">Keine Buchungen</li>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(t => `
+        <li class="transaction-item">
+          <div class="item-main">
+            <span class="item-category">${escapeHTML(t.category)}</span>
+            <span class="item-meta">${formatDate(t.date)}${t.note ? ` • ${escapeHTML(t.note)}` : ""}</span>
+          </div>
+          <div class="item-right">
+            <span class="item-amount ${t.type === 'income' ? 'income' : 'expense'}">${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}</span>
+            <button class="btn-delete" data-id="${t.id}">✕</button>
+          </div>
+        </li>
+      `).join("");
+      
+      list.querySelectorAll(".btn-delete").forEach(btn => btn.addEventListener("click", handleDelete));
+    }
+
+    function renderArchiveView() {
+      if (!transactions.length) {
+        archiveContainer.innerHTML = `<p class="empty-state">Leer</p>`;
+        return;
+      }
+
+      const grouped = {};
+      transactions.forEach(t => {
+        const c = t.category || "Sonstiges";
+        if (!grouped[c]) grouped[c] = { items: [], in: 0, out: 0 };
+        grouped[c].items.push(t);
+        t.type === "income" ? grouped[c].in += Number(t.amount) : grouped[c].out += Number(t.amount);
+      });
+
+      archiveContainer.innerHTML = Object.keys(grouped).map(cat => {
+        const net = grouped[cat].in - grouped[cat].out;
+        const isPos = net >= 0;
+        
+        return `
+          <div class="category-group">
+            <div class="category-group-header">
+              <span>${escapeHTML(cat)}</span>
+              <span class="item-amount ${isPos ? 'income' : 'expense'}">${isPos ? '+' : '-'}${formatCurrency(Math.abs(net))}</span>
+            </div>
+            <ul class="category-group-list">
+              ${grouped[cat].items.map(t => `
+                <li class="transaction-item" style="padding: 0.5rem">
+                  <div class="item-main"><span class="item-meta">${formatDate(t.date)}${t.note ? ` • ${escapeHTML(t.note)}` : ""}</span></div>
+                  <div class="item-right">
+                    <span class="item-amount ${t.type === 'income' ? 'income' : 'expense'}">${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}</span>
+                    <button class="btn-delete" data-id="${t.id}">✕</button>
+                  </div>
+                </li>
+              `).join("")}
+            </ul>
+          </div>
+        `;
+      }).join("");
+      archiveContainer.querySelectorAll(".btn-delete").forEach(b => b.addEventListener("click", handleDelete));
+    }
+
+    // Chart.js Rendering
+    function renderChart() {
+      const ctx = document.getElementById('expenseChart').getContext('2d');
+      
+      // Nur Ausgaben filtern
+      const expenses = transactions.filter(t => t.type === 'expense');
+      
+      if (expenses.length === 0) {
+        // Falls Chart existiert, zerstören
+        if (expenseChartInstance) {
+          expenseChartInstance.destroy();
+          expenseChartInstance = null;
+        }
+        return;
+      }
+
+      // Gruppieren und Summieren
+      const categoryTotals = {};
+      expenses.forEach(t => {
+        const cat = t.category || "Sonstiges";
+        categoryTotals[cat] = (categoryTotals[cat] || 0) + Number(t.amount);
+      });
+
+      const labels = Object.keys(categoryTotals);
+      const data = Object.values(categoryTotals);
+
+      // Fitness Theme Farben generieren (Türkis, Grün, Orange, Lila, etc.)
+      const bgColors = [
+        '#00e5ff', '#00e676', '#ffea00', '#ff3d00', '#d500f9', '#2979ff', '#1de9b6', '#ff9100'
+      ];
+
+      // Altes Chart zerstören bevor neues gerendert wird (verhindert Hover-Glitches)
+      if (expenseChartInstance) {
+        expenseChartInstance.destroy();
+      }
+
+      expenseChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: bgColors.slice(0, labels.length),
+            borderWidth: 2,
+            borderColor: '#121212' // Hintergrundfarbe der Card
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                color: '#ffffff',
+                font: { size: 12 }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let value = context.raw;
+                  return ' ' + formatCurrency(value);
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Helper
+    function formatCurrency(n) {
+      return Number(n).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+    }
+    function formatDate(d) {
+      return new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+    }
+    function escapeHTML(s) {
+      return String(s).replace(/[&<>"']/g, m => ({"&": "&amp;","<": "&lt;",">": "&gt;",'"': "&quot;","'": "&#39;"})[m]);
     }
   </script>
 </body>
